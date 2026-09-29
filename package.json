@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "ikon": "node scripts/buat-ikon.mjs"
+    "ikon": "node scripts/buat-ikon.mjs",
+    "impor": "node scripts/impor-data.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
