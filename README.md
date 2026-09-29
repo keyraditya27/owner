@@ -190,6 +190,7 @@ src/
     sheets/            google.ts (klien Sheets API + service account) · skema.ts (kolom tiap tab) · sinkron.ts (mesin sinkron)
 scripts/
   sheet-diubah.gs      Apps Script pengisi kolom Diubah di sheet
+.claude/skills/        skill Claude dari repo keyraditya27/CLAUDE — gaya-arl (tampilan & logo) · pembukuan-agensi (aturan pembukuan & pajak)
 public/
   sw.js                service worker (tidak meng-cache data keuangan)
   ikon/ logo/          dibuat oleh `npm run ikon`
