@@ -25,7 +25,7 @@ export default async function LayoutAplikasi({ children }: { children: React.Rea
         penggunaId: pengguna.id,
       }}
     >
-      <div className="min-h-dvh lebar:grid lebar:grid-cols-[200px_minmax(0,1fr)_330px] xl2:grid-cols-[230px_minmax(0,1fr)_380px]">
+      <div className="min-h-dvh print:!block lebar:grid lebar:grid-cols-[200px_minmax(0,1fr)_330px] xl2:grid-cols-[230px_minmax(0,1fr)_380px]">
         <Sidebar pengguna={pengguna} tunggakan={telat(data).length} />
         <HeaderHP pengguna={pengguna} />
         <main className="min-w-0 overflow-x-hidden bg-latar p-3 pb-[calc(96px+env(safe-area-inset-bottom))] lebar:p-[22px]">

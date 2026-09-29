@@ -8,7 +8,7 @@
  */
 import { KATEGORI_TITIPAN, JENIS_PAJAK } from '@/lib/konstanta';
 import { hariSelisih, tanggalBulanBerikut } from '@/lib/format';
-import type { Klien, Pajak, Rekening, Tagihan, Transaksi, UtangVendor, Vendor } from '@/lib/tipe-db';
+import type { Aset, Klien, Pajak, Perusahaan, Rekening, Tagihan, Transaksi, UtangVendor, Vendor } from '@/lib/tipe-db';
 
 export type DataKeuangan = {
   transaksi: Transaksi[];
@@ -18,6 +18,8 @@ export type DataKeuangan = {
   vendor: Vendor[];
   utang: UtangVendor[];
   pajak: Pajak[];
+  aset: Aset[];
+  perusahaan: Perusahaan | null;
   namaPerusahaan: string;
 };
 

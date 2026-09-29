@@ -130,7 +130,7 @@ export default function PanelChat() {
 
       <section
         aria-label="Catat lewat chat"
-        className={`${
+        className={`cetak-sembunyi ${
           bukaHP ? 'fixed inset-0 z-40 flex' : 'hidden'
         } flex-col bg-white lebar:sticky lebar:top-0 lebar:z-auto lebar:flex lebar:h-dvh lebar:border-l lebar:border-garis`}
       >

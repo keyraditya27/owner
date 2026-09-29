@@ -15,7 +15,7 @@ export default function SubTab({
   lencana?: Record<string, number | string>;
 }) {
   return (
-    <div className="flex gap-1 overflow-x-auto border-b border-garis bg-white px-[18px] [scrollbar-width:none] lebar:px-9 [&::-webkit-scrollbar]:hidden">
+    <div className="cetak-sembunyi flex gap-1 overflow-x-auto border-b border-garis bg-white px-[18px] [scrollbar-width:none] lebar:px-9 [&::-webkit-scrollbar]:hidden">
       {halaman.tabs.map((t, i) => {
         const on = t.kunci === aktif;
         const b = lencana[t.kunci];

@@ -33,7 +33,7 @@ export default function BarPeriode({ periode, opsiBulan }: { periode: Periode; o
 
   return (
     <div
-      className={`flex flex-wrap items-center justify-between gap-3 border-b border-garis bg-[#F8FAFD] px-[18px] py-2.5 lebar:px-9 lebar:py-3 ${
+      className={`cetak-sembunyi flex flex-wrap items-center justify-between gap-3 border-b border-garis bg-[#F8FAFD] px-[18px] py-2.5 lebar:px-9 lebar:py-3 ${
         proses ? 'opacity-70' : ''
       }`}
     >

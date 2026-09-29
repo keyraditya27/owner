@@ -12,7 +12,7 @@ Konteks bisnis dan aturan kode ada di `CLAUDE.md`. Urutan pembangunan ada di `pr
 | 2 | Ringkasan, Transaksi, Klien & Tagihan + bar periode | ✅ |
 | — | Impor data Juni–September | ✅ skrip siap (`npm run impor`) |
 | 3 | Chat AI dengan aksi (Gemini, lewat server) | ✅ |
-| 4 | Aset, Pajak, Laporan | belum |
+| 4 | Aset & Inventaris, Pajak, Laporan + CSV & cetak PDF | ✅ |
 | 5 | Hak akses, tutup buku, riwayat, persetujuan, backup | belum |
 | 6 | Sinkron Google Sheets | belum |
 
@@ -58,6 +58,13 @@ Isi `GEMINI_API_KEY` di `.env.local` (dan di Vercel → Environment Variables). 
 - Setiap aksi dari model divalidasi di server: nominal harus bilangan bulat positif, tanggal `YYYY-MM-DD`, klien/vendor harus cocok dan tidak ambigu, kategori harus dari daftar, peran harus boleh, periode tidak boleh sudah tutup buku. Yang tidak lolos ditolak beserta alasannya; sisanya tetap jalan.
 - Staf hanya boleh mencatat transaksi dan mengubah transaksinya sendiri lewat chat.
 - **Beda dengan prototipe:** kalau Gemini tidak bisa dihubungi, mode offline hanya menjawab pertanyaan (saldo, siapa belum bayar, rekap) dan **tidak menyimpan apa pun**. Parser kata kunci prototipe terbukti mencatat koreksi sebagai transaksi baru (dobel), jadi tidak dipakai untuk menulis data.
+
+## Laporan & pajak
+
+- Angka Laba Rugi, Neraca, Arus Kas, Per Kategori, estimasi PPh Badan, dan daftar aset sudah dicocokkan dengan prototipe v7 memakai data yang sama — hasilnya sama persis.
+- Setiap laporan bisa diunduh sebagai CSV (mengikuti bar periode) dan dicetak / disimpan PDF lewat tombol **Cetak / PDF**. Saat dicetak, menu, chat, dan tombol tidak ikut.
+- Penyusutan dihitung saat dibutuhkan, tidak disimpan. Beda kecil dengan prototipe: akumulasi garis lurus dibulatkan sekali dari total, jadi tidak ada selisih Rp1 yang menumpuk.
+- Estimasi PPh Badan mengurangkan **PPh 23 yang dipotong klien** sebagai kredit pajak (kolom di tagihan), dan memberi peringatan untuk tagihan yang belum ada bukti potongnya.
 
 ## Akun pertama
 

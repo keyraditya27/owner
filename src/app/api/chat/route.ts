@@ -10,7 +10,6 @@ import { GalatAI, panggilGemini } from '@/lib/ai/gemini';
 import { ambilJSON, instruksiSistem } from '@/lib/ai/instruksi';
 import { otakOffline } from '@/lib/ai/offline';
 import { rencanakan, type BarisLog } from '@/lib/ai/rencana';
-import type { Aset } from '@/lib/tipe-db';
 
 export const maxDuration = 60;
 
@@ -50,13 +49,8 @@ export async function POST(req: NextRequest) {
 
   const db = await klienServer();
   const hari = hariIni();
-  const [data, asetQ, perusahaanQ, tutupQ] = await Promise.all([
-    ambilData(),
-    db.from('aset').select('*').eq('arsip', false),
-    db.from('perusahaan').select('batas_kapitalisasi').limit(1).maybeSingle(),
-    db.from('tutup_buku').select('periode'),
-  ]);
-  const aset = (asetQ.data ?? []) as Aset[];
+  const [data, tutupQ] = await Promise.all([ambilData(), db.from('tutup_buku').select('periode')]);
+  const aset = data.aset;
 
   // ---- 1-2. tanya model (atau cadangan offline)
   let hasil: { balas?: unknown; aksi?: unknown };
@@ -78,7 +72,7 @@ export async function POST(req: NextRequest) {
   const { ops, log } = rencanakan(hasil.aksi, {
     data,
     aset,
-    batasKapitalisasi: perusahaanQ.data?.batas_kapitalisasi ?? 5_000_000,
+    batasKapitalisasi: data.perusahaan?.batas_kapitalisasi ?? 5_000_000,
     periodeTutup: new Set((tutupQ.data ?? []).map((t) => t.periode as string)),
     pengguna: { id: saya.id, peran: saya.peran },
     hariIni: hari,

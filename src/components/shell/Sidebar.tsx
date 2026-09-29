@@ -19,7 +19,7 @@ export default function Sidebar({ pengguna, tunggakan = 0 }: { pengguna: Penggun
     }`;
 
   return (
-    <aside className="sticky top-0 hidden h-dvh flex-col overflow-y-auto bg-sidebar px-4 py-6 text-white lebar:flex">
+    <aside className="cetak-sembunyi sticky top-0 hidden h-dvh flex-col overflow-y-auto bg-sidebar px-4 py-6 text-white lebar:flex">
       <div className="px-1.5 pb-1.5">
         <LogoARL varian="putih" tinggi={56} denganTeks sub="KEUANGAN INTERNAL" />
       </div>

@@ -16,7 +16,7 @@ export default function HeaderHP({ pengguna }: { pengguna: PenggunaAktif }) {
   const [buka, setBuka] = useState(false);
   const path = usePathname();
   return (
-    <header className="pt-aman sticky top-0 z-30 bg-sidebar text-white lebar:hidden">
+    <header className="cetak-sembunyi pt-aman sticky top-0 z-30 bg-sidebar text-white lebar:hidden">
       <div className="flex items-center justify-between gap-3 px-4 py-2.5">
         <Link href="/ringkasan" className="text-white no-underline">
           <LogoARL varian="putih" tinggi={34} denganTeks />

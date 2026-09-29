@@ -16,7 +16,7 @@ import { bacaPeriode, COOKIE_PERIODE } from '@/lib/periode';
  */
 export const ambilData = cache(async (): Promise<DataKeuangan> => {
   const db = await klienServer();
-  const [transaksi, klien, tagihan, rekening, vendor, utang, pajak, perusahaan] = await Promise.all([
+  const [transaksi, klien, tagihan, rekening, vendor, utang, pajak, aset, perusahaan] = await Promise.all([
     db.from('transaksi').select('*').eq('arsip', false).order('tanggal', { ascending: false }),
     db.from('klien').select('*').eq('arsip', false).order('nama'),
     db.from('tagihan').select('*').eq('arsip', false),
@@ -24,9 +24,10 @@ export const ambilData = cache(async (): Promise<DataKeuangan> => {
     db.from('vendor').select('*').eq('arsip', false).order('nama'),
     db.from('utang_vendor').select('*').eq('arsip', false),
     db.from('pajak').select('*').eq('arsip', false).order('periode', { ascending: false }),
-    db.from('perusahaan').select('nama').limit(1).maybeSingle(),
+    db.from('aset').select('*').eq('arsip', false).order('tgl_perolehan', { ascending: false }),
+    db.from('perusahaan').select('*').limit(1).maybeSingle(),
   ]);
-  const galat = [transaksi, klien, tagihan, rekening, vendor, utang, pajak].find((r) => r.error)?.error;
+  const galat = [transaksi, klien, tagihan, rekening, vendor, utang, pajak, aset].find((r) => r.error)?.error;
   if (galat) throw new Error('Gagal membaca database: ' + galat.message);
 
   return {
@@ -37,6 +38,8 @@ export const ambilData = cache(async (): Promise<DataKeuangan> => {
     vendor: vendor.data ?? [],
     utang: utang.data ?? [],
     pajak: pajak.data ?? [],
+    aset: aset.data ?? [],
+    perusahaan: perusahaan.data ?? null,
     namaPerusahaan: perusahaan.data?.nama ?? 'PT Arah Ruang Langit',
   };
 });

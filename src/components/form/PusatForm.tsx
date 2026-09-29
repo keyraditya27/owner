@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import type { Klien, Rekening, Tagihan, Transaksi, UtangVendor, Vendor } from '@/lib/tipe-db';
+import type { Aset, Klien, Pajak, Perusahaan, Rekening, Tagihan, Transaksi, UtangVendor, Vendor } from '@/lib/tipe-db';
 import type { Peran } from '@/lib/tipe-db';
 import type { TagihanTerbuka } from '@/lib/hitung';
 import FormTransaksi from './FormTransaksi';
@@ -10,6 +10,7 @@ import FormTagihan from './FormTagihan';
 import { FormRekening, FormUtang, FormVendor } from './FormMaster';
 import { Pengingat, PengingatMassal } from './Pengingat';
 import LihatBukti from './LihatBukti';
+import { FormAset, FormPajak, FormPerusahaan } from './FormAsetPajak';
 
 /**
  * Pusat semua modal form. Tombol di mana pun (termasuk di server component)
@@ -25,7 +26,10 @@ export type Permintaan =
   | { jenis: 'utang'; vendor: Vendor; data?: UtangVendor }
   | { jenis: 'pengingat'; klien: Klien; tagihan: TagihanTerbuka[] }
   | { jenis: 'pengingat-massal'; telat: TagihanTerbuka[] }
-  | { jenis: 'bukti'; transaksi: Transaksi; url?: string };
+  | { jenis: 'bukti'; transaksi: Transaksi; url?: string }
+  | { jenis: 'aset'; data?: Aset; jenisAset?: 'tetap' | 'inventaris' }
+  | { jenis: 'pajak'; data?: Pajak }
+  | { jenis: 'perusahaan'; data: Perusahaan };
 
 export type Pilihan = { klien: Klien[]; rekening: Rekening[]; vendor: Vendor[]; peran: Peran; penggunaId: string };
 
@@ -76,6 +80,9 @@ export default function PusatForm({ pilihan, children }: { pilihan: Pilihan; chi
       {aktif?.jenis === 'pengingat' ? <Pengingat klien={aktif.klien} tagihan={aktif.tagihan} /> : null}
       {aktif?.jenis === 'pengingat-massal' ? <PengingatMassal telat={aktif.telat} /> : null}
       {aktif?.jenis === 'bukti' ? <LihatBukti transaksi={aktif.transaksi} url={aktif.url} /> : null}
+      {aktif?.jenis === 'aset' ? <FormAset data={aktif.data} jenis={aktif.jenisAset} /> : null}
+      {aktif?.jenis === 'pajak' ? <FormPajak data={aktif.data} /> : null}
+      {aktif?.jenis === 'perusahaan' ? <FormPerusahaan data={aktif.data} /> : null}
       <div
         role="status"
         className={`pointer-events-none fixed bottom-[calc(90px+env(safe-area-inset-bottom))] left-1/2 z-[80] -translate-x-1/2 rounded-[9px] bg-navy px-[18px] py-[11px] text-[13px] text-white shadow-toast transition-opacity lebar:bottom-[22px] ${
