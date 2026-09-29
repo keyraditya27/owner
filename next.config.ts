@@ -2,6 +2,10 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: {
+    // Bukti transfer (PDF sampai 8 MB) dikirim lewat server action. Foto sudah dikecilkan di browser.
+    serverActions: { bodySizeLimit: '10mb' },
+  },
   async headers() {
     return [
       {

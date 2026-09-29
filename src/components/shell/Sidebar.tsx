@@ -11,7 +11,7 @@ import { keluar } from '@/app/login/actions';
 const aktif = (path: string, href: string) => path === href || path.startsWith(href + '/');
 
 /** Sidebar navy desktop — mengikuti <aside> di prototipe v7. Disembunyikan di bawah 1080px. */
-export default function Sidebar({ pengguna }: { pengguna: PenggunaAktif }) {
+export default function Sidebar({ pengguna, tunggakan = 0 }: { pengguna: PenggunaAktif; tunggakan?: number }) {
   const path = usePathname();
   const kelasTombol = (on: boolean) =>
     `flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-[13.5px] no-underline ${
@@ -32,6 +32,9 @@ export default function Sidebar({ pengguna }: { pengguna: PenggunaAktif }) {
             <Link key={h.href} href={h.href} aria-current={on ? 'page' : undefined} className={kelasTombol(on)}>
               <IkonSvg nama={h.ikon} className="h-[15px] w-[15px] shrink-0 opacity-85" />
               {h.label}
+              {h.href === '/klien' && tunggakan > 0 ? (
+                <span className="ml-auto rounded-xl bg-merah px-2 py-px text-[10.5px] font-bold text-white">{tunggakan}</span>
+              ) : null}
             </Link>
           );
         })}

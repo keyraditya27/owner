@@ -9,8 +9,8 @@ Konteks bisnis dan aturan kode ada di `CLAUDE.md`. Urutan pembangunan ada di `pr
 | Tahap | Isi | Status |
 |---|---|---|
 | 1 | Fondasi: Next.js, login, halaman Tim, kerangka tata letak, PWA | ✅ |
-| 2 | Ringkasan, Transaksi, Klien & Tagihan + bar periode | belum |
-| — | Impor data Juni–September | belum |
+| 2 | Ringkasan, Transaksi, Klien & Tagihan + bar periode | ✅ |
+| — | Impor data Juni–September | ✅ skrip siap (`npm run impor`) |
 | 3 | Chat AI dengan aksi | belum |
 | 4 | Aset, Pajak, Laporan | belum |
 | 5 | Hak akses, tutup buku, riwayat, persetujuan, backup | belum |
@@ -22,9 +22,10 @@ Di Supabase → SQL Editor, jalankan berurutan:
 
 1. `schema.sql`
 2. `schema-tambahan-sheets.sql`
-3. `schema-perbaikan-tahap1.sql` — **wajib**. Tanpa ini, aturan keamanan di `schema.sql` membuat tidak ada satu pun pengguna yang bisa membaca data (penjelasan ada di dalam file).
+3. `schema-perbaikan-tahap1.sql` — **wajib**. Tanpa ini tidak ada yang bisa membaca profilnya sendiri (login ditolak) dan staf tidak bisa membaca data apa pun.
+4. `schema-tahap2.sql` — **wajib**. Isinya: audit log otomatis untuk semua tabel, bucket `bukti` (privat), dan dua perbaikan: staf tidak bisa mencatat transaksi karena pemicu antrean sheet, dan kunci tutup buku yang bisa diakali dengan mengganti tanggal.
 
-Lalu buat bucket Storage `bukti` (private).
+Semua file aman dijalankan ulang. Keempatnya sudah diuji di Postgres 16.
 
 ## Menjalankan di komputer
 
@@ -35,6 +36,17 @@ npm run dev
 ```
 
 Buka http://localhost:3000.
+
+## Impor data lama
+
+Setelah database siap dan `.env.local` terisi:
+
+```
+npm run impor -- --coba   # lihat dulu apa yang akan dimasukkan, tidak menulis apa pun
+npm run impor             # impor sungguhan
+```
+
+Sumbernya `arl-keuangan-DATA.json` (ekspor dari prototipe v7). "Rekening Operasional" di prototipe dimasukkan ke **BCA Operasional**. Skrip aman dijalankan berkali-kali: baris yang sudah ada tidak ditimpa dan tidak digandakan. Di akhir, skrip mencetak angka yang harus cocok dengan prototipe: masuk Rp29.957.363, keluar Rp25.919.647, saldo Rp4.037.716.
 
 ## Akun pertama
 
