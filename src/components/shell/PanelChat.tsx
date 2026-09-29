@@ -34,7 +34,7 @@ async function kecilkan(file: File): Promise<File> {
 
 /**
  * Panel chat AI. Desktop: menempel di kanan, selalu terlihat. HP: tombol
- * melayang → layar penuh. Pesan dikirim ke /api/chat; kunci Gemini tidak
+ * melayang → layar penuh. Pesan dikirim ke /api/chat; kunci AI (NVIDIA/Gemini) tidak
  * pernah sampai ke browser.
  */
 export default function PanelChat() {

@@ -11,7 +11,7 @@ Konteks bisnis dan aturan kode ada di `CLAUDE.md`. Urutan pembangunan ada di `pr
 | 1 | Fondasi: Next.js, login, halaman Tim, kerangka tata letak, PWA | ✅ |
 | 2 | Ringkasan, Transaksi, Klien & Tagihan + bar periode | ✅ |
 | — | Impor data Juni–September | ✅ skrip siap (`npm run impor`) |
-| 3 | Chat AI dengan aksi (Gemini, lewat server) | ✅ |
+| 3 | Chat AI dengan aksi (NVIDIA atau Gemini, lewat server) | ✅ |
 | 4 | Aset & Inventaris, Pajak, Laporan + CSV & cetak PDF | ✅ |
 | 5 | Hak akses, tutup buku, riwayat, persetujuan, backup | ✅ |
 | 6 | Sinkron Google Sheets dua arah | ✅ |
@@ -54,12 +54,13 @@ Sumbernya `arl-keuangan-DATA.json` (ekspor dari prototipe v7). "Rekening Operasi
 
 ## Chat AI
 
-Isi `GEMINI_API_KEY` di `.env.local` (dan di Vercel → Environment Variables). Kunci ini hanya dipakai di server (`/api/chat`), tidak pernah sampai ke browser.
+Isi **salah satu** kunci di `.env.local` (dan di Vercel → Environment Variables). Kunci hanya dipakai di server (`/api/chat`), tidak pernah sampai ke browser.
 
-- Model dipilih otomatis lewat ListModels: Flash stabil versi tertinggi. Kalau sedang sibuk (Google membalas 503), dicoba Flash versi di bawahnya, lalu `gemini-flash-latest`, lalu versi lite. `GEMINI_MODEL` bisa memaksa satu model.
+- **`NVIDIA_API_KEY`** (dipakai kalau terisi) — build.nvidia.com. Teks memakai `nvidia/nemotron-3-super-120b-a12b` (±5 detik), cadangan `openai/gpt-oss-20b` kalau Nemotron sedang lambat (>25 detik). Foto bukti dibaca dua tahap: `meta/llama-3.2-11b-vision-instruct` menyalin teks di foto, lalu Nemotron menyusun transaksinya. **PDF belum bisa dibaca** lewat NVIDIA — kirim foto/screenshot. `NVIDIA_MODEL` dan `NVIDIA_MODEL_GAMBAR` bisa memaksa model lain.
+- **`GEMINI_API_KEY`** — model dipilih otomatis lewat ListModels: Flash stabil versi tertinggi, lalu versi di bawahnya kalau sibuk. `GEMINI_MODEL` bisa memaksa satu model. `AI_PENYEDIA=gemini` memaksa Gemini walau kunci NVIDIA ada.
 - Setiap aksi dari model divalidasi di server: nominal harus bilangan bulat positif, tanggal `YYYY-MM-DD`, klien/vendor harus cocok dan tidak ambigu, kategori harus dari daftar, peran harus boleh, periode tidak boleh sudah tutup buku. Yang tidak lolos ditolak beserta alasannya; sisanya tetap jalan.
 - Staf hanya boleh mencatat transaksi dan mengubah transaksinya sendiri lewat chat.
-- **Beda dengan prototipe:** kalau Gemini tidak bisa dihubungi, mode offline hanya menjawab pertanyaan (saldo, siapa belum bayar, rekap) dan **tidak menyimpan apa pun**. Parser kata kunci prototipe terbukti mencatat koreksi sebagai transaksi baru (dobel), jadi tidak dipakai untuk menulis data.
+- **Beda dengan prototipe:** kalau AI tidak bisa dihubungi, mode offline hanya menjawab pertanyaan (saldo, siapa belum bayar, rekap) dan **tidak menyimpan apa pun**. Parser kata kunci prototipe terbukti mencatat koreksi sebagai transaksi baru (dobel), jadi tidak dipakai untuk menulis data.
 
 ## Laporan & pajak
 

@@ -6,7 +6,8 @@ import { penggunaSaatIni } from '@/lib/pengguna';
 import { klienAdmin } from '@/lib/supabase/admin';
 import { klienServer } from '@/lib/supabase/server';
 import { BUKTI_MAKS_BYTE } from '@/lib/konstanta';
-import { GalatAI, panggilGemini } from '@/lib/ai/gemini';
+import { GalatAI } from '@/lib/ai/gemini';
+import { panggilAI } from '@/lib/ai/model';
 import { ambilJSON, instruksiSistem } from '@/lib/ai/instruksi';
 import { otakOffline } from '@/lib/ai/offline';
 import { rencanakan, type BarisLog } from '@/lib/ai/rencana';
@@ -25,7 +26,7 @@ export type JawabanChat = {
 
 /**
  * POST /api/chat — teks + (opsional) foto/PDF bukti.
- * 1. susun konteks dari database  2. panggil Gemini (server saja)
+ * 1. susun konteks dari database  2. panggil AI — NVIDIA atau Gemini (server saja)
  * 3. validasi keluaran model       4. jalankan semua perubahan dalam satu transaksi DB
  * 5. simpan riwayat untuk tombol Batalkan
  */
@@ -54,11 +55,11 @@ export async function POST(req: NextRequest) {
 
   // ---- 1-2. tanya model (atau cadangan offline)
   let hasil: { balas?: unknown; aksi?: unknown };
-  let mode = 'gemini';
+  let mode = 'ai';
   let catatan = '';
   try {
     const gambar = file ? { mime: file.type, base64: Buffer.from(await file.arrayBuffer()).toString('base64') } : null;
-    const r = await panggilGemini(instruksiSistem(data, aset, hari), teks, gambar);
+    const r = await panggilAI(instruksiSistem(data, aset, hari), teks, gambar);
     mode = r.model;
     hasil = ambilJSON(r.teks);
   } catch (e) {
