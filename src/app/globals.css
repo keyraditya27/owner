@@ -1,0 +1,116 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Gaya dasar dari prototipe v7. Nilai warna diambil dari token di
+ * tailwind.config.ts lewat theme() supaya tidak ditulis ulang.
+ */
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-latar font-sans text-navy;
+    line-height: 1.55;
+  }
+  button {
+    @apply cursor-pointer;
+  }
+  input,
+  select,
+  textarea {
+    @apply w-full rounded-lg border border-garis bg-white px-2.5 py-2 text-[13.5px] text-navy;
+  }
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: 2px solid theme('colors.biru.DEFAULT');
+    outline-offset: -1px;
+    border-color: theme('colors.biru.DEFAULT');
+  }
+  a {
+    @apply text-biru;
+  }
+}
+
+@layer components {
+  /* Angka selalu rata lebar supaya kolom rupiah sejajar */
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-biru px-[15px] py-[9px] text-[13px] font-bold text-white hover:bg-biru-tua disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-ghost {
+    @apply btn border border-garis bg-white text-navy hover:border-[#C9D8EA] hover:bg-krem;
+  }
+  .btn-hero {
+    @apply btn border border-white/30 bg-white/[.14] text-white hover:bg-white/[.24];
+  }
+  .btn-sm {
+    @apply rounded-[7px] px-2.5 py-[5px] text-xs;
+  }
+
+  /* Label formulir gaya prototipe */
+  .label {
+    @apply mb-1 block text-[11px] font-bold uppercase tracking-[.5px] text-muted;
+  }
+
+  /* Kotak insight berbatas kiri berwarna */
+  .ins {
+    @apply mb-3 rounded-r-[10px] border-l-4 border-biru bg-krem px-[18px] py-3.5;
+  }
+  .ins h4 {
+    @apply mb-[3px] font-serif text-sm font-bold;
+  }
+  .ins p {
+    @apply text-[13px] text-teks2;
+  }
+  .ins-good {
+    @apply border-hijau bg-hijau-muda;
+  }
+  .ins-warn {
+    @apply border-amber bg-amber-muda;
+  }
+  .ins-bad {
+    @apply border-merah bg-merah-muda;
+  }
+
+  .empty {
+    @apply rounded-[10px] border border-dashed border-garis bg-krem px-4 py-[30px] text-center text-[13px] text-muted;
+  }
+  .empty b {
+    @apply mb-1 block font-serif text-sm text-navy;
+  }
+
+  /* Tabel: header navy, baris zebra, total di footer */
+  .tabel {
+    @apply mt-1.5 w-full border-collapse text-[12.5px];
+  }
+  .tabel thead th {
+    @apply whitespace-nowrap bg-navy px-2 py-2.5 text-left text-[11px] uppercase tracking-[.4px] text-white;
+  }
+  .tabel tbody td {
+    @apply border-b border-garis px-2 py-[9px] align-middle;
+  }
+  .tabel tbody tr:nth-child(even) {
+    @apply bg-[#FAFCFE];
+  }
+  .tabel tfoot td {
+    @apply border-t-2 border-navy bg-[#EDF3FB] px-2 py-2.5 font-bold;
+  }
+
+  .pill {
+    @apply inline-block whitespace-nowrap rounded-xl px-[9px] py-0.5 text-[10.5px] font-bold text-white;
+  }
+}
+
+/* Ruang aman untuk HP berponi / gesture bar saat aplikasi terpasang */
+.pb-aman {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.pt-aman {
+  padding-top: env(safe-area-inset-top);
+}

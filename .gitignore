@@ -1,0 +1,23 @@
+# dependensi
+node_modules/
+
+# hasil build Next.js
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# kunci rahasia — JANGAN PERNAH diunggah
+.env
+.env.local
+.env.*.local
+*.pem
+# file JSON service account Google
+*-service-account*.json
+arl-keuangan-*.iam.gserviceaccount.com.json
+
+# lain-lain
+.DS_Store
+npm-debug.log*
+.vercel
