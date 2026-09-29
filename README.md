@@ -127,7 +127,7 @@ Sheet `KEUANGAN ARL` jadi cermin dua arah database. Spesifikasi di `integrasi-go
 **Menyiapkan (sekali):**
 
 1. Buat service account dan bagikan sheet ke emailnya sebagai **Editor** — langkahnya di `integrasi-google-sheets.md`.
-2. Di Vercel → Environment Variables isi `GOOGLE_SHEET_ID`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY` (salin `private_key` dari file JSON apa adanya), dan `NEXT_PUBLIC_APP_URL` (alamat aplikasi, untuk tautan bukti).
+2. Di Vercel → Environment Variables isi `GOOGLE_SHEET_ID` dan `GOOGLE_SERVICE_ACCOUNT_JSON` (tempel **seluruh isi** file JSON service account). Cara lama juga masih bisa: `GOOGLE_SERVICE_ACCOUNT_EMAIL` + `GOOGLE_PRIVATE_KEY`. Pastikan `NEXT_PUBLIC_APP_URL` terisi (untuk tautan bukti).
 3. Buka Kontrol → **Sinkron Sheet** → **Tarik dari Sheet**. Sinkron pertama membuat tab Transaksi, Klien, Tagihan, Vendor, Utang, Aset, Pajak, Rekening, dan Ringkasan, lalu menulis semua data.
 4. Disarankan: pasang `scripts/sheet-diubah.gs` di sheet (Extensions → Apps Script). Skrip ini mengisi kolom **Diubah** saat sheet diedit. Tanpa skrip itu, kalau baris yang sama diubah di dua tempat sekaligus, versi aplikasi selalu menang.
 
