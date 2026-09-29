@@ -33,14 +33,15 @@ async function kecilkan(file: File): Promise<File> {
 }
 
 /**
- * Panel chat AI. Desktop: menempel di kanan, selalu terlihat. HP: tombol
- * melayang → layar penuh. Pesan dikirim ke /api/chat; kunci AI (NVIDIA/Gemini) tidak
+ * Panel chat AI sebagai pop-up. Semua ukuran layar: tombol chat melayang di kanan bawah.
+ * Diklik → desktop: jendela mengambang di kanan bawah; HP: layar penuh.
+ * Tombol kecilkan (atau Esc) mengembalikannya ke tombol. Isi chat tetap tersimpan. Pesan dikirim ke /api/chat; kunci AI (NVIDIA/Gemini) tidak
  * pernah sampai ke browser.
  */
 export default function PanelChat() {
   const router = useRouter();
-  const { buka, kabar } = usePusat();
-  const [bukaHP, setBukaHP] = useState(false);
+  const { buka: bukaForm, kabar } = usePusat();
+  const [buka, setBuka] = useState(false);
   const [pesan, setPesan] = useState<PesanChat[]>([]);
   const [teks, setTeks] = useState('');
   const [lampiran, setLampiran] = useState<File | null>(null);
@@ -56,13 +57,20 @@ export default function PanelChat() {
   }, [muat]);
   useEffect(() => {
     log.current?.scrollTo({ top: log.current.scrollHeight });
-  }, [pesan, proses, bukaHP]);
+  }, [pesan, proses, buka]);
   useEffect(() => {
-    document.body.style.overflow = bukaHP ? 'hidden' : '';
+    if (!buka) return;
+    // Layar penuh hanya di HP — halaman di belakangnya jangan ikut tergulir
+    const hp = !window.matchMedia('(min-width: 1080px)').matches;
+    if (hp) document.body.style.overflow = 'hidden';
+    kotak.current?.focus({ preventScroll: true });
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setBuka(false);
+    window.addEventListener('keydown', esc);
     return () => {
       document.body.style.overflow = '';
+      window.removeEventListener('keydown', esc);
     };
-  }, [bukaHP]);
+  }, [buka]);
 
   const pasangLampiran = (f: File | null) => {
     if (pratinjau) URL.revokeObjectURL(pratinjau);
@@ -107,8 +115,8 @@ export default function PanelChat() {
   const ubahTrx = async (id: string) => {
     const t = await ambilTransaksi(id);
     if (!t) return kabar('Transaksi sudah tidak ada');
-    setBukaHP(false);
-    buka({ jenis: 'transaksi', data: t });
+    setBuka(false);
+    bukaForm({ jenis: 'transaksi', data: t });
   };
 
   const bersihkan = async () => {
@@ -120,19 +128,24 @@ export default function PanelChat() {
 
   return (
     <>
-      <button
-        onClick={() => setBukaHP(true)}
-        aria-label="Buka chat"
-        className="fixed bottom-[calc(76px+env(safe-area-inset-bottom))] right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-biru text-white shadow-toast lebar:hidden"
-      >
-        <IkonSvg nama="chat" className="h-6 w-6" />
-      </button>
+      {!buka ? (
+        <button
+          onClick={() => setBuka(true)}
+          aria-label="Buka chat"
+          title="Catat lewat chat"
+          className="cetak-sembunyi fixed bottom-[calc(76px+env(safe-area-inset-bottom))] right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-biru text-white shadow-toast transition hover:bg-biru-tua lebar:bottom-6 lebar:right-6"
+        >
+          <IkonSvg nama="chat" className="h-6 w-6" />
+          {proses ? <span className="absolute right-1 top-1 h-3 w-3 animate-pulse rounded-full border-2 border-white bg-amber" /> : null}
+        </button>
+      ) : null}
 
+      {/* Tetap terpasang saat dikecilkan supaya pesan & ketikan tidak hilang */}
       <section
         aria-label="Catat lewat chat"
         className={`cetak-sembunyi ${
-          bukaHP ? 'fixed inset-0 z-40 flex' : 'hidden'
-        } flex-col bg-white lebar:sticky lebar:top-0 lebar:z-auto lebar:flex lebar:h-dvh lebar:border-l lebar:border-garis`}
+          buka ? 'flex' : 'hidden'
+        } fixed inset-0 z-40 flex-col overflow-hidden bg-white lebar:inset-auto lebar:bottom-6 lebar:right-6 lebar:h-[min(640px,calc(100dvh-48px))] lebar:w-[400px] lebar:rounded-2xl lebar:border lebar:border-garis lebar:shadow-toast`}
       >
         <div className="pt-aman bg-navy text-white">
           <div className="flex items-center justify-between gap-2.5 px-4 py-3.5">
@@ -147,8 +160,8 @@ export default function PanelChat() {
               <button onClick={bersihkan} className="btn-hero btn-sm">
                 Bersihkan
               </button>
-              <button onClick={() => setBukaHP(false)} aria-label="Tutup chat" className="rounded-lg p-1.5 text-langit-4 hover:text-white lebar:hidden">
-                <IkonSvg nama="tutup" className="h-5 w-5" />
+              <button onClick={() => setBuka(false)} aria-label="Kecilkan chat" title="Kecilkan" className="rounded-lg p-1.5 text-langit-4 hover:bg-white/10 hover:text-white">
+                <IkonSvg nama="kecilkan" className="h-5 w-5" />
               </button>
             </div>
           </div>
