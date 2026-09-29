@@ -32,6 +32,8 @@ export async function segarkanSesi(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user && !terbuka) {
+    // API dipanggil lewat fetch — jawab 401, jangan dialihkan ke halaman login.
+    if (pathname.startsWith('/api/')) return NextResponse.json({ galat: 'Sesi habis, silakan masuk lagi' }, { status: 401 });
     const url = new URL('/login', request.url);
     if (pathname !== '/') url.searchParams.set('lanjut', pathname);
     return NextResponse.redirect(url);

@@ -11,7 +11,7 @@ Konteks bisnis dan aturan kode ada di `CLAUDE.md`. Urutan pembangunan ada di `pr
 | 1 | Fondasi: Next.js, login, halaman Tim, kerangka tata letak, PWA | ✅ |
 | 2 | Ringkasan, Transaksi, Klien & Tagihan + bar periode | ✅ |
 | — | Impor data Juni–September | ✅ skrip siap (`npm run impor`) |
-| 3 | Chat AI dengan aksi | belum |
+| 3 | Chat AI dengan aksi (Gemini, lewat server) | ✅ |
 | 4 | Aset, Pajak, Laporan | belum |
 | 5 | Hak akses, tutup buku, riwayat, persetujuan, backup | belum |
 | 6 | Sinkron Google Sheets | belum |
@@ -25,7 +25,9 @@ Di Supabase → SQL Editor, jalankan berurutan:
 3. `schema-perbaikan-tahap1.sql` — **wajib**. Tanpa ini tidak ada yang bisa membaca profilnya sendiri (login ditolak) dan staf tidak bisa membaca data apa pun.
 4. `schema-tahap2.sql` — **wajib**. Isinya: audit log otomatis untuk semua tabel, bucket `bukti` (privat), dan dua perbaikan: staf tidak bisa mencatat transaksi karena pemicu antrean sheet, dan kunci tutup buku yang bisa diakali dengan mengganti tanggal.
 
-Semua file aman dijalankan ulang. Keempatnya sudah diuji di Postgres 16.
+5. `schema-tahap3.sql` — fungsi yang menjalankan perubahan dari chat AI dalam **satu transaksi** (semua atau tidak sama sekali) dan tombol **Batalkan**.
+
+Semua file aman dijalankan ulang. Semuanya sudah diuji di Postgres 16.
 
 ## Menjalankan di komputer
 
@@ -47,6 +49,15 @@ npm run impor             # impor sungguhan
 ```
 
 Sumbernya `arl-keuangan-DATA.json` (ekspor dari prototipe v7). "Rekening Operasional" di prototipe dimasukkan ke **BCA Operasional**. Skrip aman dijalankan berkali-kali: baris yang sudah ada tidak ditimpa dan tidak digandakan. Di akhir, skrip mencetak angka yang harus cocok dengan prototipe: masuk Rp29.957.363, keluar Rp25.919.647, saldo Rp4.037.716.
+
+## Chat AI
+
+Isi `GEMINI_API_KEY` di `.env.local` (dan di Vercel → Environment Variables). Kunci ini hanya dipakai di server (`/api/chat`), tidak pernah sampai ke browser.
+
+- Model dipilih otomatis lewat ListModels: Flash stabil versi tertinggi. Kalau sedang sibuk (Google membalas 503), dicoba Flash versi di bawahnya, lalu `gemini-flash-latest`, lalu versi lite. `GEMINI_MODEL` bisa memaksa satu model.
+- Setiap aksi dari model divalidasi di server: nominal harus bilangan bulat positif, tanggal `YYYY-MM-DD`, klien/vendor harus cocok dan tidak ambigu, kategori harus dari daftar, peran harus boleh, periode tidak boleh sudah tutup buku. Yang tidak lolos ditolak beserta alasannya; sisanya tetap jalan.
+- Staf hanya boleh mencatat transaksi dan mengubah transaksinya sendiri lewat chat.
+- **Beda dengan prototipe:** kalau Gemini tidak bisa dihubungi, mode offline hanya menjawab pertanyaan (saldo, siapa belum bayar, rekap) dan **tidak menyimpan apa pun**. Parser kata kunci prototipe terbukti mencatat koreksi sebagai transaksi baru (dobel), jadi tidak dipakai untuk menulis data.
 
 ## Akun pertama
 
