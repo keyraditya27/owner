@@ -11,7 +11,7 @@ export default function NavBawah() {
   return (
     <nav
       aria-label="Menu utama"
-      className="pb-aman fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-navy lebar:hidden"
+      className="cetak-sembunyi pb-aman fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-navy lebar:hidden"
     >
       <ul className="grid grid-cols-6">
         {HALAMAN.map((h) => {

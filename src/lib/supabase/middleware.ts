@@ -3,7 +3,8 @@ import { createServerClient } from '@supabase/ssr';
 import { SUPABASE_ANON_KEY, SUPABASE_URL, supabaseSiap } from '@/lib/env';
 
 /** Rute yang boleh dibuka tanpa login. */
-const RUTE_TERBUKA = ['/login', '/mulai', '/offline', '/belum-siap'];
+// /api/cron dijaga CRON_SECRET di route-nya sendiri, bukan sesi login.
+const RUTE_TERBUKA = ['/login', '/mulai', '/offline', '/belum-siap', '/api/cron'];
 
 export async function segarkanSesi(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -32,6 +33,8 @@ export async function segarkanSesi(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user && !terbuka) {
+    // API dipanggil lewat fetch — jawab 401, jangan dialihkan ke halaman login.
+    if (pathname.startsWith('/api/')) return NextResponse.json({ galat: 'Sesi habis, silakan masuk lagi' }, { status: 401 });
     const url = new URL('/login', request.url);
     if (pathname !== '/') url.searchParams.set('lanjut', pathname);
     return NextResponse.redirect(url);

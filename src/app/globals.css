@@ -114,3 +114,40 @@
 .pt-aman {
   padding-top: env(safe-area-inset-top);
 }
+
+/* ---------- Cetak / simpan PDF ----------
+ * Hanya isi halaman yang dicetak: sidebar, bilah HP, menu bawah, panel chat,
+ * bar periode, sub-tab, dan tombol disembunyikan. Warna latar tetap dicetak. */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .cetak-sembunyi,
+  button,
+  a.btn,
+  a.btn-hero,
+  a.btn-ghost {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+  }
+  main > div {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    max-width: none !important;
+  }
+  .tabel {
+    break-inside: auto;
+  }
+  .tabel tr {
+    break-inside: avoid;
+  }
+}

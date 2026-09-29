@@ -56,3 +56,32 @@ export async function tambahAnggota(_: HasilTambah, form: FormData): Promise<Has
   revalidatePath('/tim');
   return { sukses: `${nama} ditambahkan sebagai ${peran}. Kirim email & password sementara ke yang bersangkutan.` };
 }
+
+/**
+ * Ubah peran atau nonaktifkan anggota. Pemilik tidak bisa mengubah dirinya
+ * sendiri (supaya tidak terkunci keluar), dan peran "pemilik" tidak bisa diberikan.
+ */
+export async function ubahAnggota(id: string, ubah: { peran?: string; aktif?: boolean }): Promise<HasilTambah> {
+  const pemilik = await wajibPemilik();
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return { galat: 'Anggota tidak dikenal.' };
+  if (id === pemilik.id) return { galat: 'Akunmu sendiri tidak bisa diubah dari sini.' };
+
+  const d: { peran?: string; aktif?: boolean } = {};
+  if (ubah.peran !== undefined) {
+    if (!PERAN_BOLEH.includes(ubah.peran as (typeof PERAN_BOLEH)[number])) return { galat: 'Peran tidak dikenal.' };
+    d.peran = ubah.peran;
+  }
+  if (ubah.aktif !== undefined) d.aktif = !!ubah.aktif;
+  if (!Object.keys(d).length) return { galat: 'Tidak ada yang diubah.' };
+
+  const admin = klienAdmin();
+  const { data: lama } = await admin.from('pengguna').select('*').eq('id', id).maybeSingle();
+  if (!lama) return { galat: 'Anggota tidak ditemukan.' };
+  if (lama.peran === 'pemilik') return { galat: 'Pemilik lain tidak bisa diubah dari sini.' };
+  const { error } = await admin.from('pengguna').update(d).eq('id', id);
+  if (error) return { galat: 'Gagal menyimpan: ' + error.message };
+  await catatAudit(admin, { penggunaId: pemilik.id, tabel: 'pengguna', recordId: id, aksi: 'update', nilaiLama: lama, nilaiBaru: { ...lama, ...d } });
+
+  revalidatePath('/tim');
+  return { sukses: d.aktif === false ? `${lama.nama} dinonaktifkan — tidak bisa login lagi.` : `${lama.nama} diperbarui.` };
+}

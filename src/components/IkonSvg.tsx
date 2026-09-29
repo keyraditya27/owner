@@ -9,6 +9,7 @@ const PATH: Record<Ikon | 'plus' | 'kirim' | 'chat' | 'tutup' | 'keluar', string
   lonceng: 'M12 22a2 2 0 002-2h-4a2 2 0 002 2zm6-6V11a6 6 0 10-12 0v5l-2 2v1h16v-1l-2-2z',
   dok: 'M5 3h9l5 5v13H5V3zm8 1.5V9h4.5L13 4.5zM7 12h10v2H7v-2zm0 4h10v2H7v-2z',
   tim: 'M9 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zm7 0a3 3 0 100-6 3 3 0 000 6zM9 13c-3.3 0-7 1.7-7 4.5V20h14v-2.5C16 14.7 12.3 13 9 13zm7 0c-.6 0-1.2.1-1.8.2 1.1.9 1.8 2.1 1.8 3.3V20h6v-2.5c0-2.6-3.3-4.5-6-4.5z',
+  kunci: 'M12 2a5 5 0 00-5 5v3H5v12h14V10h-2V7a5 5 0 00-5-5zm-3 5a3 3 0 016 0v3H9V7zm3 7a2 2 0 011 3.7V20h-2v-2.3A2 2 0 0112 14z',
   plus: 'M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2h6z',
   kirim: 'M12 4l7 7h-4v9h-6v-9H5l7-7z',
   chat: 'M4 4h16a2 2 0 012 2v10a2 2 0 01-2 2H8l-4 4V6a2 2 0 012-2z',

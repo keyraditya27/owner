@@ -9,12 +9,12 @@ Konteks bisnis dan aturan kode ada di `CLAUDE.md`. Urutan pembangunan ada di `pr
 | Tahap | Isi | Status |
 |---|---|---|
 | 1 | Fondasi: Next.js, login, halaman Tim, kerangka tata letak, PWA | ✅ |
-| 2 | Ringkasan, Transaksi, Klien & Tagihan + bar periode | belum |
-| — | Impor data Juni–September | belum |
-| 3 | Chat AI dengan aksi | belum |
-| 4 | Aset, Pajak, Laporan | belum |
-| 5 | Hak akses, tutup buku, riwayat, persetujuan, backup | belum |
-| 6 | Sinkron Google Sheets | belum |
+| 2 | Ringkasan, Transaksi, Klien & Tagihan + bar periode | ✅ |
+| — | Impor data Juni–September | ✅ skrip siap (`npm run impor`) |
+| 3 | Chat AI dengan aksi (Gemini, lewat server) | ✅ |
+| 4 | Aset & Inventaris, Pajak, Laporan + CSV & cetak PDF | ✅ |
+| 5 | Hak akses, tutup buku, riwayat, persetujuan, backup | ✅ |
+| 6 | Sinkron Google Sheets dua arah | ✅ |
 
 ## Menyiapkan database (sekali saja)
 
@@ -22,9 +22,14 @@ Di Supabase → SQL Editor, jalankan berurutan:
 
 1. `schema.sql`
 2. `schema-tambahan-sheets.sql`
-3. `schema-perbaikan-tahap1.sql` — **wajib**. Tanpa ini, aturan keamanan di `schema.sql` membuat tidak ada satu pun pengguna yang bisa membaca data (penjelasan ada di dalam file).
+3. `schema-perbaikan-tahap1.sql` — **wajib**. Tanpa ini tidak ada yang bisa membaca profilnya sendiri (login ditolak) dan staf tidak bisa membaca data apa pun.
+4. `schema-tahap2.sql` — **wajib**. Isinya: audit log otomatis untuk semua tabel, bucket `bukti` (privat), dan dua perbaikan: staf tidak bisa mencatat transaksi karena pemicu antrean sheet, dan kunci tutup buku yang bisa diakali dengan mengganti tanggal.
 
-Lalu buat bucket Storage `bukti` (private).
+5. `schema-tahap3.sql` — fungsi yang menjalankan perubahan dari chat AI dalam **satu transaksi** (semua atau tidak sama sekali) dan tombol **Batalkan**.
+6. `schema-tahap5.sql` — hak akses per peran, tutup buku, antrean persetujuan pengeluaran, bucket `backup`.
+7. `schema-tahap6.sql` — sinkron Google Sheets: kolom Catatan di transaksi, sidik baris, kunci supaya hanya satu sinkron berjalan, dan perbaikan pemicu antrean (versi lama berhenti mengantre perubahan aplikasi pada baris yang pernah diubah dari sheet).
+
+Semua file aman dijalankan ulang. Semuanya sudah diuji di Postgres 16.
 
 ## Menjalankan di komputer
 
@@ -36,6 +41,33 @@ npm run dev
 
 Buka http://localhost:3000.
 
+## Impor data lama
+
+Setelah database siap dan `.env.local` terisi:
+
+```
+npm run impor -- --coba   # lihat dulu apa yang akan dimasukkan, tidak menulis apa pun
+npm run impor             # impor sungguhan
+```
+
+Sumbernya `arl-keuangan-DATA.json` (ekspor dari prototipe v7). "Rekening Operasional" di prototipe dimasukkan ke **BCA Operasional**. Skrip aman dijalankan berkali-kali: baris yang sudah ada tidak ditimpa dan tidak digandakan. Di akhir, skrip mencetak angka yang harus cocok dengan prototipe: masuk Rp29.957.363, keluar Rp25.919.647, saldo Rp4.037.716.
+
+## Chat AI
+
+Isi `GEMINI_API_KEY` di `.env.local` (dan di Vercel → Environment Variables). Kunci ini hanya dipakai di server (`/api/chat`), tidak pernah sampai ke browser.
+
+- Model dipilih otomatis lewat ListModels: Flash stabil versi tertinggi. Kalau sedang sibuk (Google membalas 503), dicoba Flash versi di bawahnya, lalu `gemini-flash-latest`, lalu versi lite. `GEMINI_MODEL` bisa memaksa satu model.
+- Setiap aksi dari model divalidasi di server: nominal harus bilangan bulat positif, tanggal `YYYY-MM-DD`, klien/vendor harus cocok dan tidak ambigu, kategori harus dari daftar, peran harus boleh, periode tidak boleh sudah tutup buku. Yang tidak lolos ditolak beserta alasannya; sisanya tetap jalan.
+- Staf hanya boleh mencatat transaksi dan mengubah transaksinya sendiri lewat chat.
+- **Beda dengan prototipe:** kalau Gemini tidak bisa dihubungi, mode offline hanya menjawab pertanyaan (saldo, siapa belum bayar, rekap) dan **tidak menyimpan apa pun**. Parser kata kunci prototipe terbukti mencatat koreksi sebagai transaksi baru (dobel), jadi tidak dipakai untuk menulis data.
+
+## Laporan & pajak
+
+- Angka Laba Rugi, Neraca, Arus Kas, Per Kategori, estimasi PPh Badan, dan daftar aset sudah dicocokkan dengan prototipe v7 memakai data yang sama — hasilnya sama persis.
+- Setiap laporan bisa diunduh sebagai CSV (mengikuti bar periode) dan dicetak / disimpan PDF lewat tombol **Cetak / PDF**. Saat dicetak, menu, chat, dan tombol tidak ikut.
+- Penyusutan dihitung saat dibutuhkan, tidak disimpan. Beda kecil dengan prototipe: akumulasi garis lurus dibulatkan sekali dari total, jadi tidak ada selisih Rp1 yang menumpuk.
+- Estimasi PPh Badan mengurangkan **PPh 23 yang dipotong klien** sebagai kredit pajak (kolom di tagihan), dan memberi peringatan untuk tagihan yang belum ada bukti potongnya.
+
 ## Akun pertama
 
 Buka `/mulai` untuk membuat akun **pemilik**. Halaman ini hanya bisa dipakai sekali — begitu sudah ada pengguna, halaman ini terkunci.
@@ -43,6 +75,79 @@ Buka `/mulai` untuk membuat akun **pemilik**. Halaman ini hanya bisa dipakai sek
 ## Menambah anggota tim
 
 Login sebagai pemilik → menu **Tim** → isi nama, email, password sementara, dan peran (staf/admin). Berikan email dan password sementara langsung ke orangnya.
+
+Di tabel anggota, pemilik bisa mengubah peran atau **Nonaktifkan** seseorang (mis. yang resign). Akun nonaktif langsung tidak bisa membuka aplikasi; datanya tetap ada.
+
+## Hak akses
+
+Semua aturan ini dijaga di database (RLS + trigger), bukan hanya disembunyikan di tampilan — berlaku juga untuk chat AI dan skrip.
+
+| | Pemilik | Admin | Staf |
+|---|---|---|---|
+| Lihat data operasional | ✓ | ✓ | ✓ kecuali gaji |
+| Catat transaksi | ✓ | ✓ | ✓ (bukan gaji); pengeluaran > Rp5 jt lewat persetujuan |
+| Ubah transaksi | ✓ | ✓ | hanya buatannya sendiri |
+| Hapus transaksi | ✓ | ✓ | ✗ |
+| Klien, tagihan, rekening, vendor, aset, pajak | ✓ | ✓ | ✗ |
+| Hapus data perusahaan | ✓ | ✗ | ✗ |
+| Setujui / tolak pengeluaran staf | ✓ | ✗ | ✗ |
+| Tutup buku | ✓ | ✓ | ✗ |
+| Buka kembali periode tertutup | ✓ | ✗ | ✗ |
+| Sinkron sheet: tarik manual, tinjau bentrok & baris hilang | ✓ | ✓ | ✗ |
+| Riwayat perubahan, backup, Tim | ✓ | ✗ | ✗ |
+
+Catatan: siapa pun yang punya akses **Editor** di Google Sheet bisa mengubah pembukuan lewat sheet, dan jalurnya tidak melewati batas persetujuan Rp5 juta. Beri akses Editor hanya ke orang yang memang boleh (Key), dan atur tautan umum sheet ke *Viewer* atau *Restricted*.
+
+Semuanya ada di menu **Kontrol** (tab yang tampil menyesuaikan peran).
+
+## Backup & memulihkan data
+
+**Otomatis:** Cron Vercel (`vercel.json`) memanggil `/api/cron/backup` setiap **Senin 01.00 WIB**. Seluruh isi database — termasuk gaji dan riwayat perubahan — disimpan sebagai JSON di bucket privat `backup`. Wajib isi `CRON_SECRET` di Vercel → Environment Variables (teks acak panjang); tanpa itu endpoint menolak semua panggilan.
+
+**Manual:** Kontrol → Backup → **Backup sekarang**. Di tab yang sama, file backup bisa diunduh (hanya pemilik).
+
+**Memulihkan:**
+
+1. Siapkan database: jalankan semua file SQL di atas (ke proyek Supabase baru kalau yang lama rusak).
+2. Buat ulang akun lewat `/mulai` (pemilik) dan halaman Tim — akun login tidak ikut backup. Rujukan ke pengguna yang tidak ada akan dikosongkan.
+3. Unduh file backup, taruh di folder proyek, isi `.env.local` dengan kunci Supabase tujuan, lalu:
+
+```
+npm run pulihkan -- arl-backup-2026-10-05-18-00.json --coba   # lihat dulu, tidak menulis apa pun
+npm run pulihkan -- arl-backup-2026-10-05-18-00.json          # pulihkan
+```
+
+Baris yang sudah ada tidak ditimpa, jadi aman dijalankan ulang. Tutup buku dipulihkan paling akhir supaya tidak menghalangi transaksi yang dipulihkan. File backup berisi data gaji — simpan hanya di tempat pribadi.
+
+## Sinkron Google Sheets
+
+Sheet `KEUANGAN ARL` jadi cermin dua arah database. Spesifikasi di `integrasi-google-sheets.md`.
+
+**Menyiapkan (sekali):**
+
+1. Buat service account dan bagikan sheet ke emailnya sebagai **Editor** — langkahnya di `integrasi-google-sheets.md`.
+2. Di Vercel → Environment Variables isi `GOOGLE_SHEET_ID`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY` (salin `private_key` dari file JSON apa adanya), dan `NEXT_PUBLIC_APP_URL` (alamat aplikasi, untuk tautan bukti).
+3. Buka Kontrol → **Sinkron Sheet** → **Tarik dari Sheet**. Sinkron pertama membuat tab Transaksi, Klien, Tagihan, Vendor, Utang, Aset, Pajak, Rekening, dan Ringkasan, lalu menulis semua data.
+4. Disarankan: pasang `scripts/sheet-diubah.gs` di sheet (Extensions → Apps Script). Skrip ini mengisi kolom **Diubah** saat sheet diedit. Tanpa skrip itu, kalau baris yang sama diubah di dua tempat sekaligus, versi aplikasi selalu menang.
+
+**Kapan sinkron berjalan:**
+
+- **Aplikasi → sheet:** setiap perubahan masuk `sinkron_antrean`. Selama aplikasi terbuka di perangkat mana pun, antrean dikirim ±2 detik setelah menyimpan (paling lambat 30 detik) dalam satu `batchUpdate`.
+- **Sheet → aplikasi:** saat aplikasi dibuka kalau tarikan terakhir lebih dari 5 menit lalu, tombol **Tarik dari Sheet**, dan cron `/api/cron/sinkron`.
+- Hanya satu proses sinkron berjalan pada satu waktu, walau banyak HP/desktop terbuka.
+
+**Cron tiap 5 menit.** Paket Vercel Hobby hanya mengizinkan cron sekali sehari — `vercel.json` memakai jadwal harian (00.30 WIB) supaya deploy tidak ditolak. Untuk tiap 5 menit, pilih salah satu:
+- Vercel Pro: ubah jadwal `/api/cron/sinkron` di `vercel.json` jadi `*/5 * * * *`.
+- Gratis: daftar di cron-job.org, panggil `https://<alamat-aplikasi>/api/cron/sinkron` tiap 5 menit dengan header `Authorization: Bearer <CRON_SECRET>`.
+
+**Aturan pengaman:**
+
+- Baris yang dihapus dari sheet **tidak** menghapus data. Muncul di Kontrol → Sinkron Sheet → *Hilang dari Sheet* (dan lencana di menu Kontrol) dengan pilihan **Tulis ulang ke sheet** atau **Sudah ditinjau**. Untuk benar-benar menghapus lewat sheet, ubah kolom Status jadi `dihapus` (datanya diarsipkan, bisa dikembalikan dengan mengubahnya lagi ke `aktif`).
+- Baris yang tidak lolos validasi (nominal, tanggal, kategori, tipe, nama klien/rekening/vendor yang tidak persis sama, periode tutup buku, kategori gaji) diberi latar merah dan alasannya ditulis di awal kolom Catatan. Setelah diperbaiki, merahnya hilang sendiri dan catatan asli dipertahankan.
+- Bentrok diputuskan per baris: kolom Diubah paling baru menang. Versi yang kalah tercatat di *Bentrok* supaya bisa diperiksa.
+- Data gaji (payroll, karyawan, transaksi kategori *Gaji & fee tim*) tidak pernah ditulis ke sheet.
+- Kolom Bukti berisi tautan ke aplikasi (`/bukti/<id>`), bukan ke file. Pembukanya harus login, dan file dibuka lewat signed URL 60 detik.
+- Tab Ringkasan berisi rumus yang ditulis sekali saat dibuat. Aplikasi tidak pernah membacanya.
 
 ## Memasang di HP
 
@@ -82,6 +187,9 @@ src/
     navigasi.ts        daftar halaman & sub-tab
     pengguna.ts        cek login & peran
     audit.ts           tulis audit_log
+    sheets/            google.ts (klien Sheets API + service account) · skema.ts (kolom tiap tab) · sinkron.ts (mesin sinkron)
+scripts/
+  sheet-diubah.gs      Apps Script pengisi kolom Diubah di sheet
 public/
   sw.js                service worker (tidak meng-cache data keuangan)
   ikon/ logo/          dibuat oleh `npm run ikon`
