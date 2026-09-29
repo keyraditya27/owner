@@ -1,7 +1,7 @@
 import 'server-only';
 
 /**
- * Cadangan saat Gemini tidak bisa dihubungi — HANYA menjawab pertanyaan
+ * Cadangan saat AI (NVIDIA/Gemini) tidak bisa dihubungi — HANYA menjawab pertanyaan
  * (saldo, siapa belum bayar, rekap), memakai jawabPertanyaan() dari prototipe.
  *
  * Beda sengaja dengan prototipe: mode offline TIDAK menyimpan apa pun.

@@ -4,6 +4,7 @@ import 'server-only';
  * Skema aksi, konteks data, dan prompt sistem — disalin dari bagian
  * "MESIN AI v2" di prototipe v7 (SKEMA_AKSI, konteksSingkat, instruksiSistem).
  */
+import { tambahHari } from '@/lib/format';
 import { KATEGORI_KELUAR, KATEGORI_MASUK } from '@/lib/konstanta';
 import {
   pajakBelumSetor,
@@ -100,14 +101,19 @@ CONTOH:
 "pph 23 agustus udah disetor" → {"balas":"Ditandai sudah setor.","aksi":[{"aksi":"pajak_setor","jenisPajak":"PPh 23"}]}
 "siapa belum bayar?" → {"balas":"<daftar dari konteks>","aksi":[]}
 
-Hari ini ${hariIni}.
+Hari ini ${hariIni}. Kemarin ${tambahHari(hariIni, -1)}. Kemarin lusa ${tambahHari(hariIni, -2)}.
+Kalau pengguna menyebut waktu ("kemarin", "tanggal 3", "minggu lalu"), isi "tanggal" sesuai kata itu — jangan selalu hari ini.
 KONTEKS DATA SAAT INI:
 ${JSON.stringify(konteksSingkat(d, aset, hariIni))}`;
 }
 
 /** Ambil objek JSON dari balasan model (kadang dibungkus ```json). */
 export function ambilJSON(raw: string): { balas?: unknown; aksi?: unknown } {
-  const t = raw.replace(/```json|```/g, '').trim();
+  // Model penalaran (mis. DeepSeek, Nemotron reasoning) bisa menulis <think>…</think> sebelum jawabannya.
+  const t = raw
+    .replace(/<think>[\s\S]*?<\/think>/g, '')
+    .replace(/```json|```/g, '')
+    .trim();
   const a = t.indexOf('{');
   const b = t.lastIndexOf('}');
   if (a < 0 || b < 0) throw new Error('Balasan AI bukan JSON');

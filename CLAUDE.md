@@ -22,13 +22,13 @@ Konstanta yang mengatur ini di prototipe: `BUKAN_BEBAN` dan `KOREKSI_FISKAL`. Pe
 - Next.js 15 (App Router) + TypeScript
 - Supabase: Postgres, Auth, Storage (bucket `bukti`, private)
 - Tailwind CSS
-- Gemini API untuk chat AI (dipanggil dari **server**, bukan browser)
+- AI untuk chat: **NVIDIA** (build.nvidia.com, Nemotron) — Gemini sebagai alternatif. Dipanggil dari **server**, bukan browser
 - Deploy ke Vercel
 - PWA: bisa dipasang di HP dan desktop (manifest + service worker). Data keuangan **tidak** di-cache di perangkat — selalu diambil dari server supaya semua perangkat melihat angka yang sama.
 
 ## Aturan yang tidak boleh dilanggar
 
-- **Kunci API tidak pernah menyentuh browser.** `GEMINI_API_KEY` dan `SUPABASE_SERVICE_ROLE_KEY` hanya dipakai di API route atau server action.
+- **Kunci API tidak pernah menyentuh browser.** `NVIDIA_API_KEY`, `GEMINI_API_KEY`, dan `SUPABASE_SERVICE_ROLE_KEY` hanya dipakai di API route atau server action.
 - **Penyusutan dihitung, tidak disimpan.** Hitung dari data aset saat dibutuhkan. Kalau disimpan sebagai tabel, satu salah input menular ke semua periode.
 - **Semua uang dalam rupiah bulat.** Simpan sebagai `bigint`, jangan `float`. Jangan pernah ada pecahan sen.
 - **Tanggal disimpan sebagai `date`**, bukan timestamp, kecuali `created_at`/`updated_at`.
@@ -74,8 +74,8 @@ Panel chat AI menempel di kanan, selalu terlihat. Di bawah 1080px (HP/tablet): s
 Bukan chatbot pasif — dia mengubah data. Pola kerjanya:
 
 1. Pengguna mengetik perintah biasa, boleh melampirkan foto bukti transfer.
-2. Server mengirim ke Gemini bersama konteks data terkini dan daftar aksi yang tersedia.
-3. Gemini membalas JSON: `{"balas": "...", "aksi": [{"aksi":"nama_aksi", ...}]}`.
+2. Server mengirim ke model AI (NVIDIA/Gemini) bersama konteks data terkini dan daftar aksi yang tersedia.
+3. Model membalas JSON: `{"balas": "...", "aksi": [{"aksi":"nama_aksi", ...}]}`.
 4. Server memvalidasi lalu menjalankan aksinya di database.
 5. Antarmuka menampilkan ringkasan perubahan dengan tombol Batalkan.
 
