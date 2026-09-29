@@ -14,7 +14,7 @@ Konteks bisnis dan aturan kode ada di `CLAUDE.md`. Urutan pembangunan ada di `pr
 | 3 | Chat AI dengan aksi (Gemini, lewat server) | ✅ |
 | 4 | Aset & Inventaris, Pajak, Laporan + CSV & cetak PDF | ✅ |
 | 5 | Hak akses, tutup buku, riwayat, persetujuan, backup | ✅ |
-| 6 | Sinkron Google Sheets | belum |
+| 6 | Sinkron Google Sheets dua arah | ✅ |
 
 ## Menyiapkan database (sekali saja)
 
@@ -27,6 +27,7 @@ Di Supabase → SQL Editor, jalankan berurutan:
 
 5. `schema-tahap3.sql` — fungsi yang menjalankan perubahan dari chat AI dalam **satu transaksi** (semua atau tidak sama sekali) dan tombol **Batalkan**.
 6. `schema-tahap5.sql` — hak akses per peran, tutup buku, antrean persetujuan pengeluaran, bucket `backup`.
+7. `schema-tahap6.sql` — sinkron Google Sheets: kolom Catatan di transaksi, sidik baris, kunci supaya hanya satu sinkron berjalan, dan perbaikan pemicu antrean (versi lama berhenti mengantre perubahan aplikasi pada baris yang pernah diubah dari sheet).
 
 Semua file aman dijalankan ulang. Semuanya sudah diuji di Postgres 16.
 
@@ -92,7 +93,10 @@ Semua aturan ini dijaga di database (RLS + trigger), bukan hanya disembunyikan d
 | Setujui / tolak pengeluaran staf | ✓ | ✗ | ✗ |
 | Tutup buku | ✓ | ✓ | ✗ |
 | Buka kembali periode tertutup | ✓ | ✗ | ✗ |
+| Sinkron sheet: tarik manual, tinjau bentrok & baris hilang | ✓ | ✓ | ✗ |
 | Riwayat perubahan, backup, Tim | ✓ | ✗ | ✗ |
+
+Catatan: siapa pun yang punya akses **Editor** di Google Sheet bisa mengubah pembukuan lewat sheet, dan jalurnya tidak melewati batas persetujuan Rp5 juta. Beri akses Editor hanya ke orang yang memang boleh (Key), dan atur tautan umum sheet ke *Viewer* atau *Restricted*.
 
 Semuanya ada di menu **Kontrol** (tab yang tampil menyesuaikan peran).
 
@@ -114,6 +118,36 @@ npm run pulihkan -- arl-backup-2026-10-05-18-00.json          # pulihkan
 ```
 
 Baris yang sudah ada tidak ditimpa, jadi aman dijalankan ulang. Tutup buku dipulihkan paling akhir supaya tidak menghalangi transaksi yang dipulihkan. File backup berisi data gaji — simpan hanya di tempat pribadi.
+
+## Sinkron Google Sheets
+
+Sheet `KEUANGAN ARL` jadi cermin dua arah database. Spesifikasi di `integrasi-google-sheets.md`.
+
+**Menyiapkan (sekali):**
+
+1. Buat service account dan bagikan sheet ke emailnya sebagai **Editor** — langkahnya di `integrasi-google-sheets.md`.
+2. Di Vercel → Environment Variables isi `GOOGLE_SHEET_ID`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY` (salin `private_key` dari file JSON apa adanya), dan `NEXT_PUBLIC_APP_URL` (alamat aplikasi, untuk tautan bukti).
+3. Buka Kontrol → **Sinkron Sheet** → **Tarik dari Sheet**. Sinkron pertama membuat tab Transaksi, Klien, Tagihan, Vendor, Utang, Aset, Pajak, Rekening, dan Ringkasan, lalu menulis semua data.
+4. Disarankan: pasang `scripts/sheet-diubah.gs` di sheet (Extensions → Apps Script). Skrip ini mengisi kolom **Diubah** saat sheet diedit. Tanpa skrip itu, kalau baris yang sama diubah di dua tempat sekaligus, versi aplikasi selalu menang.
+
+**Kapan sinkron berjalan:**
+
+- **Aplikasi → sheet:** setiap perubahan masuk `sinkron_antrean`. Selama aplikasi terbuka di perangkat mana pun, antrean dikirim ±2 detik setelah menyimpan (paling lambat 30 detik) dalam satu `batchUpdate`.
+- **Sheet → aplikasi:** saat aplikasi dibuka kalau tarikan terakhir lebih dari 5 menit lalu, tombol **Tarik dari Sheet**, dan cron `/api/cron/sinkron`.
+- Hanya satu proses sinkron berjalan pada satu waktu, walau banyak HP/desktop terbuka.
+
+**Cron tiap 5 menit.** Paket Vercel Hobby hanya mengizinkan cron sekali sehari — `vercel.json` memakai jadwal harian (00.30 WIB) supaya deploy tidak ditolak. Untuk tiap 5 menit, pilih salah satu:
+- Vercel Pro: ubah jadwal `/api/cron/sinkron` di `vercel.json` jadi `*/5 * * * *`.
+- Gratis: daftar di cron-job.org, panggil `https://<alamat-aplikasi>/api/cron/sinkron` tiap 5 menit dengan header `Authorization: Bearer <CRON_SECRET>`.
+
+**Aturan pengaman:**
+
+- Baris yang dihapus dari sheet **tidak** menghapus data. Muncul di Kontrol → Sinkron Sheet → *Hilang dari Sheet* (dan lencana di menu Kontrol) dengan pilihan **Tulis ulang ke sheet** atau **Sudah ditinjau**. Untuk benar-benar menghapus lewat sheet, ubah kolom Status jadi `dihapus` (datanya diarsipkan, bisa dikembalikan dengan mengubahnya lagi ke `aktif`).
+- Baris yang tidak lolos validasi (nominal, tanggal, kategori, tipe, nama klien/rekening/vendor yang tidak persis sama, periode tutup buku, kategori gaji) diberi latar merah dan alasannya ditulis di awal kolom Catatan. Setelah diperbaiki, merahnya hilang sendiri dan catatan asli dipertahankan.
+- Bentrok diputuskan per baris: kolom Diubah paling baru menang. Versi yang kalah tercatat di *Bentrok* supaya bisa diperiksa.
+- Data gaji (payroll, karyawan, transaksi kategori *Gaji & fee tim*) tidak pernah ditulis ke sheet.
+- Kolom Bukti berisi tautan ke aplikasi (`/bukti/<id>`), bukan ke file. Pembukanya harus login, dan file dibuka lewat signed URL 60 detik.
+- Tab Ringkasan berisi rumus yang ditulis sekali saat dibuat. Aplikasi tidak pernah membacanya.
 
 ## Memasang di HP
 
@@ -153,6 +187,9 @@ src/
     navigasi.ts        daftar halaman & sub-tab
     pengguna.ts        cek login & peran
     audit.ts           tulis audit_log
+    sheets/            google.ts (klien Sheets API + service account) · skema.ts (kolom tiap tab) · sinkron.ts (mesin sinkron)
+scripts/
+  sheet-diubah.gs      Apps Script pengisi kolom Diubah di sheet
 public/
   sw.js                service worker (tidak meng-cache data keuangan)
   ikon/ logo/          dibuat oleh `npm run ikon`

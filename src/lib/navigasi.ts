@@ -113,14 +113,19 @@ export const KONTROL: Halaman = {
   tabs: [
     { kunci: 'persetujuan', label: 'Persetujuan' },
     { kunci: 'tutupbuku', label: 'Tutup Buku' },
+    { kunci: 'sinkron', label: 'Sinkron Sheet' },
     { kunci: 'riwayat', label: 'Riwayat Perubahan' },
     { kunci: 'backup', label: 'Backup' },
   ],
 };
 
 /** Tab Kontrol yang boleh dibuka tiap peran. */
-export const tabKontrolUntuk = (peran: 'pemilik' | 'admin' | 'staf') =>
-  peran === 'pemilik' ? KONTROL.tabs : peran === 'admin' ? KONTROL.tabs.slice(0, 2) : KONTROL.tabs.slice(0, 1);
+const TAB_PERAN = {
+  pemilik: ['persetujuan', 'tutupbuku', 'sinkron', 'riwayat', 'backup'],
+  admin: ['persetujuan', 'tutupbuku', 'sinkron'],
+  staf: ['persetujuan'],
+};
+export const tabKontrolUntuk = (peran: 'pemilik' | 'admin' | 'staf') => KONTROL.tabs.filter((t) => TAB_PERAN[peran].includes(t.kunci));
 
 export const halamanDari = (href: string) => HALAMAN.find((h) => h.href === href)!;
 

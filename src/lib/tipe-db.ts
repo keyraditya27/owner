@@ -17,11 +17,14 @@ export type KondisiAset = 'Baik' | 'Perlu perbaikan' | 'Rusak';
 export type StatusAset = 'Aktif' | 'Dilepas' | 'Hilang';
 export type JenisPajak = 'PPh 21' | 'PPh 23' | 'PPh 4(2)' | 'PPN Keluaran' | 'PPh 25';
 
-/** Kolom tambahan dari schema-tambahan-sheets.sql */
+/** Kolom tambahan dari schema-tambahan-sheets.sql + schema-tahap6.sql */
 type KolomSinkron = {
   sheet_diubah: string | null;
   sheet_sumber: string | null;
   arsip: boolean;
+  /** sidik baris saat terakhir sama dengan sheet — hanya dipakai mesin sinkron */
+  sheet_hash?: string | null;
+  diubah_pada?: string;
 };
 
 export type Perusahaan = {
@@ -126,6 +129,8 @@ export type Transaksi = KolomSinkron & {
   pph_dipotong: number;
   bukti_url: string | null;
   bukti_nama: string | null;
+  /** kolom K tab Transaksi (schema-tahap6.sql) */
+  catatan?: string | null;
   sumber: string;
   dibuat_oleh: string | null;
   dibuat_pada: string;

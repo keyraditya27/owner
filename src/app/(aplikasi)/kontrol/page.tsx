@@ -13,7 +13,9 @@ import {
   tolakPengajuan,
   tutupPeriode,
 } from '@/app/(aplikasi)/aksi/kontrol';
+import { kembalikanKeSheet, tarikDariSheet, tinjauHilang, tinjauKonflik } from '@/app/(aplikasi)/aksi/sinkron';
 import { daftarBackup } from '@/lib/backup';
+import { konfigSheet } from '@/lib/sheets/google';
 import { ambilData } from '@/lib/data';
 import { bulanIni, bulanLabel, rp, tgl } from '@/lib/format';
 import { BATAS_PERSETUJUAN } from '@/lib/konstanta';
@@ -34,8 +36,13 @@ export default async function HalamanKontrol({ searchParams }: { searchParams: P
   if (cari.tab && cari.tab !== aktif) redirect('/kontrol');
 
   const db = await klienServer();
-  const { data: pengajuan } = await db.from('pengajuan').select('*').order('dibuat_pada', { ascending: false }).limit(200);
+  const [{ data: pengajuan }, { count: bentrok }, { count: hilang }] = await Promise.all([
+    db.from('pengajuan').select('*').order('dibuat_pada', { ascending: false }).limit(200),
+    db.from('sinkron_konflik').select('id', { count: 'exact', head: true }).eq('ditinjau', false),
+    db.from('sinkron_hilang').select('id', { count: 'exact', head: true }).eq('ditinjau', false),
+  ]);
   const menunggu = (pengajuan ?? []).filter((p) => p.status === 'menunggu').length;
+  const tinjau = (bentrok ?? 0) + (hilang ?? 0);
 
   return (
     <>
@@ -48,9 +55,10 @@ export default async function HalamanKontrol({ searchParams }: { searchParams: P
             : `${menunggu} pengajuan menunggu · tutup buku, riwayat perubahan, dan backup`
         }
       />
-      <SubTab halaman={{ ...KONTROL, tabs }} aktif={aktif} lencana={{ persetujuan: menunggu || '' }} />
+      <SubTab halaman={{ ...KONTROL, tabs }} aktif={aktif} lencana={{ persetujuan: menunggu || '', sinkron: tinjau || '' }} />
       {aktif === 'persetujuan' ? <Persetujuan saya={saya} daftar={(pengajuan ?? []) as Pengajuan[]} /> : null}
       {aktif === 'tutupbuku' ? <TutupBukuTab saya={saya} /> : null}
+      {aktif === 'sinkron' ? <SinkronSheet /> : null}
       {aktif === 'riwayat' ? <Riwayat cari={cari} /> : null}
       {aktif === 'backup' ? <Backup /> : null}
     </>
@@ -270,7 +278,7 @@ async function TutupBukuTab({ saya }: { saya: PenggunaAktif }) {
 }
 
 /* ---------------------------------------------------------------- RIWAYAT */
-const LEWATI = new Set(['diubah_pada', 'dibuat_pada', 'sheet_diubah', 'sheet_sumber']);
+const LEWATI = new Set(['diubah_pada', 'dibuat_pada', 'sheet_diubah', 'sheet_sumber', 'sheet_hash']);
 const judulBaris = (v: Record<string, unknown> | null) =>
   v ? String(v.keterangan ?? v.nama ?? v.periode ?? v.kode ?? '').slice(0, 60) : '';
 const tampil = (v: unknown) =>
@@ -412,6 +420,237 @@ async function Riwayat({ cari }: { cari: Cari }) {
         <Kosong judul="Tidak ada catatan">Ubah saringan di atas.</Kosong>
       )}
     </Seksi>
+  );
+}
+
+/* ---------------------------------------------------------------- SINKRON SHEET */
+const NAMA_TAB: Record<string, string> = {
+  transaksi: 'Transaksi',
+  klien: 'Klien',
+  tagihan: 'Tagihan',
+  vendor: 'Vendor',
+  utang_vendor: 'Utang',
+  aset: 'Aset',
+  pajak: 'Pajak',
+  rekening: 'Rekening',
+};
+const jamWib = (w: string | null | undefined) =>
+  w
+    ? new Date(w).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+    : '—';
+const judulData = (v: Record<string, unknown> | null) =>
+  v ? String(v.Keterangan || v.Nama || v['No Invoice'] || v.Periode || v.Kode || '').slice(0, 60) : '';
+
+async function SinkronSheet() {
+  const db = await klienServer();
+  const k = konfigSheet();
+  const [{ data: status }, { count: antre }, { data: konflik }, { data: hilang }, { data: log }] = await Promise.all([
+    db.from('sinkron_status').select('*'),
+    db.from('sinkron_antrean').select('id', { count: 'exact', head: true }).eq('diproses', false),
+    db.from('sinkron_konflik').select('*').eq('ditinjau', false).order('waktu', { ascending: false }).limit(100),
+    db.from('sinkron_hilang').select('*').eq('ditinjau', false).order('waktu', { ascending: false }).limit(100),
+    db.from('sinkron_log').select('*').order('waktu', { ascending: false }).limit(15),
+  ]);
+  const st = (status ?? []).find((s) => s.arah === 'dari_sheet');
+
+  return (
+    <>
+      <Seksi
+        ikon="dok"
+        warna={!k ? 'amber' : st?.sukses === false ? 'merah' : 'hijau'}
+        judul="Sinkron Google Sheets"
+        desk="Perubahan di aplikasi ditulis ke sheet dalam 30 detik selama aplikasi terbuka. Perubahan di sheet ditarik tiap 5 menit, saat aplikasi dibuka, atau lewat tombol di bawah."
+      >
+        {!k ? (
+          <Insight jenis="warn" judul="Belum disetel">
+            Isi GOOGLE_SHEET_ID, GOOGLE_SERVICE_ACCOUNT_EMAIL, dan GOOGLE_PRIVATE_KEY di Vercel, lalu bagikan sheet ke email service
+            account sebagai Editor. Langkahnya di integrasi-google-sheets.md.
+          </Insight>
+        ) : (
+          <>
+            <div className="mb-4 grid gap-2 text-[13px] sm:grid-cols-3">
+              <div>
+                <Sub>Sinkron terakhir berhasil</Sub>
+                <b className="num">{jamWib(st?.terakhir)}</b>
+              </div>
+              <div>
+                <Sub>Menunggu ditulis ke sheet</Sub>
+                <b className="num">{antre ?? 0} perubahan</b>
+              </div>
+              <div>
+                <Sub>Status</Sub>
+                {st?.sukses === false ? <Pill warna="merah">gagal</Pill> : <Pill warna="hijau">lancar</Pill>}
+              </div>
+            </div>
+            {st?.sukses === false && st.pesan ? (
+              <Insight jenis="bad" judul="Sinkron terakhir gagal">
+                {st.pesan}
+              </Insight>
+            ) : null}
+            <div className="flex flex-wrap gap-2">
+              <TombolAksi aksi={tarikDariSheet} varian="btn">
+                Tarik dari Sheet
+              </TombolAksi>
+              <a
+                href={`https://docs.google.com/spreadsheets/d/${encodeURIComponent(k.sheetId)}/edit`}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-ghost no-underline"
+              >
+                Buka sheet ↗
+              </a>
+            </div>
+          </>
+        )}
+      </Seksi>
+
+      <Seksi
+        ikon="lonceng"
+        warna={konflik?.length ? 'amber' : 'biru'}
+        judul="Bentrok"
+        desk="Baris yang diubah di aplikasi dan di sheet sebelum sempat disinkronkan. Yang Diubah-nya paling baru menang; versi yang kalah tercatat di sini."
+      >
+        {konflik?.length ? (
+          <GulirX>
+            <table className="tabel">
+              <thead>
+                <tr>
+                  <th>Waktu</th>
+                  <th>Tab</th>
+                  <th>Perbedaan (aplikasi → sheet)</th>
+                  <th>Menang</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {konflik.map((c) => {
+                  const a = (c.nilai_app ?? {}) as Record<string, unknown>;
+                  const s = (c.nilai_sheet ?? {}) as Record<string, unknown>;
+                  const beda = Object.keys(a).filter((x) => !['Diubah', 'Sumber', 'ID', 'Bukti'].includes(x) && String(a[x] ?? '') !== String(s[x] ?? ''));
+                  return (
+                    <tr key={c.id}>
+                      <td className="num whitespace-nowrap">{jamWib(c.waktu)}</td>
+                      <td>
+                        {NAMA_TAB[c.tabel] ?? c.tabel}
+                        <Sub>{judulData(a)}</Sub>
+                      </td>
+                      <td className="text-[12px]">
+                        {beda.length
+                          ? beda.map((x) => (
+                              <div key={x} className="break-words">
+                                <b>{x}</b>: {String(a[x] ?? '∅')} → {String(s[x] ?? '∅')}
+                              </div>
+                            ))
+                          : '—'}
+                      </td>
+                      <td>
+                        <Pill warna={c.pemenang === 'sheet' ? 'biru' : 'navy'}>{c.pemenang === 'sheet' ? 'sheet' : 'aplikasi'}</Pill>
+                      </td>
+                      <td className="text-right">
+                        <TombolAksi aksi={tinjauKonflik.bind(null, c.id)} className="btn-sm">
+                          Sudah ditinjau
+                        </TombolAksi>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </GulirX>
+        ) : (
+          <Kosong judul="Tidak ada bentrok">Semua perubahan tersinkron tanpa tabrakan.</Kosong>
+        )}
+      </Seksi>
+
+      <Seksi
+        ikon="kunci"
+        warna={hilang?.length ? 'merah' : 'biru'}
+        judul="Hilang dari Sheet"
+        desk="Baris yang dihapus dari sheet. Datanya TIDAK dihapus dari aplikasi — satu salah klik di spreadsheet tidak boleh menghapus pembukuan. Untuk benar-benar menghapus, hapus lewat aplikasi atau ubah Status di sheet jadi dihapus."
+      >
+        {hilang?.length ? (
+          <GulirX>
+            <table className="tabel">
+              <thead>
+                <tr>
+                  <th>Waktu</th>
+                  <th>Tab</th>
+                  <th>Data</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {hilang.map((h) => {
+                  const d = (h.data ?? {}) as Record<string, unknown>;
+                  return (
+                    <tr key={h.id}>
+                      <td className="num whitespace-nowrap">{jamWib(h.waktu)}</td>
+                      <td>{NAMA_TAB[h.tabel] ?? h.tabel}</td>
+                      <td>
+                        <div className="font-semibold">{judulData(d)}</div>
+                        <Sub>
+                          {[d.Tanggal, d.Kategori, typeof d.Nominal === 'number' ? rp(d.Nominal) : '']
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </Sub>
+                      </td>
+                      <td className="text-right">
+                        <div className="flex justify-end gap-1.5">
+                          <TombolAksi aksi={kembalikanKeSheet.bind(null, h.id)} varian="btn" className="btn-sm">
+                            Tulis ulang ke sheet
+                          </TombolAksi>
+                          <TombolAksi aksi={tinjauHilang.bind(null, h.id)} className="btn-sm">
+                            Sudah ditinjau
+                          </TombolAksi>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </GulirX>
+        ) : (
+          <Kosong judul="Tidak ada baris yang hilang" />
+        )}
+      </Seksi>
+
+      <Seksi ikon="daftar" judul="Log Sinkron" desk="Putaran terakhir yang memindahkan data atau gagal.">
+        {log?.length ? (
+          <GulirX>
+            <table className="tabel">
+              <thead>
+                <tr>
+                  <th>Waktu</th>
+                  <th>Arah</th>
+                  <th className="!text-right">Diproses</th>
+                  <th className="!text-right">Ditolak</th>
+                  <th>Keterangan</th>
+                </tr>
+              </thead>
+              <tbody>
+                {log.map((l) => (
+                  <tr key={l.id}>
+                    <td className="num whitespace-nowrap">{jamWib(l.waktu)}</td>
+                    <td>{l.arah === 'ke_sheet' ? 'aplikasi → sheet' : 'sheet → aplikasi'}</td>
+                    <td className="num text-right">{l.baris_diproses}</td>
+                    <td className="num text-right">{l.baris_ditolak || '—'}</td>
+                    <td className="text-[12px]">{l.pesan}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </GulirX>
+        ) : (
+          <Kosong judul="Belum ada log" />
+        )}
+        <Insight judul="Supaya bentrok diputuskan dengan adil" className="!mb-0 mt-4">
+          Pasang skrip kecil di sheet (Extensions → Apps Script, isi dari file <code>scripts/sheet-diubah.gs</code>) supaya kolom
+          Diubah terisi otomatis saat sheet diedit. Tanpa skrip itu, perubahan di aplikasi selalu menang kalau bentrok. Baris
+          yang ditolak diberi latar merah dan alasannya ditulis di kolom Catatan. Data gaji tidak pernah dikirim ke sheet.
+        </Insight>
+      </Seksi>
+    </>
   );
 }
 
