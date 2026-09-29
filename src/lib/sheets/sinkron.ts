@@ -38,7 +38,10 @@ export type HasilSinkron = {
   alasan?: string;
   masukDb: number;
   keSheet: number;
+  /** baris merah di sheet saat ini */
   ditolak: number;
+  /** yang baru ditandai merah di putaran ini */
+  ditolakBaru: number;
   konflik: number;
   hilang: number;
   durasiMs: number;
@@ -89,7 +92,7 @@ type RencanaTab = {
 
 export async function sinkron(pemicu: string): Promise<HasilSinkron> {
   const mulai = Date.now();
-  const hasil: HasilSinkron = { jalan: false, masukDb: 0, keSheet: 0, ditolak: 0, konflik: 0, hilang: 0, durasiMs: 0 };
+  const hasil: HasilSinkron = { jalan: false, masukDb: 0, keSheet: 0, ditolak: 0, ditolakBaru: 0, konflik: 0, hilang: 0, durasiMs: 0 };
   const k = konfigSheet();
   if (!k) return { ...hasil, alasan: 'Google Sheets belum disetel (GOOGLE_SHEET_ID, GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY).' };
 
@@ -104,12 +107,13 @@ export async function sinkron(pemicu: string): Promise<HasilSinkron> {
     hasil.durasiMs = Date.now() - mulai;
     const pesan = `${pemicu}: ${hasil.masukDb} masuk, ${hasil.keSheet} ditulis, ${hasil.ditolak} ditolak, ${hasil.konflik} bentrok, ${hasil.hilang} hilang`;
     await db.from('sinkron_status').update({ terakhir: new Date().toISOString(), sukses: true, pesan }).in('arah', ['ke_sheet', 'dari_sheet']);
-    if (hasil.masukDb || hasil.keSheet || hasil.ditolak || hasil.konflik || hasil.hilang) {
-      await db.from('sinkron_log').insert([
-        { arah: 'dari_sheet', baris_diproses: hasil.masukDb, baris_ditolak: hasil.ditolak, durasi_ms: hasil.durasiMs, pesan },
-        { arah: 'ke_sheet', baris_diproses: hasil.keSheet, baris_ditolak: 0, durasi_ms: hasil.durasiMs, pesan },
-      ]);
-    }
+    // satu baris log per arah yang benar-benar bergerak; putaran tanpa perubahan tidak dicatat
+    const log = [];
+    // baris yang sudah merah sejak putaran lalu tidak dicatat ulang tiap putaran
+    if (hasil.masukDb || hasil.ditolakBaru || hasil.konflik || hasil.hilang)
+      log.push({ arah: 'dari_sheet', baris_diproses: hasil.masukDb, baris_ditolak: hasil.ditolakBaru, durasi_ms: hasil.durasiMs, pesan });
+    if (hasil.keSheet) log.push({ arah: 'ke_sheet', baris_diproses: hasil.keSheet, baris_ditolak: 0, durasi_ms: hasil.durasiMs, pesan });
+    if (log.length) await db.from('sinkron_log').insert(log);
     return hasil;
   } catch (e) {
     const pesan = e instanceof Error ? e.message : String(e);
@@ -259,6 +263,7 @@ async function bandingkan(
     const asli = catatanAsli(sel(row, 'Catatan'));
     const isi = PREFIKS_TOLAK + alasan + (asli ? ' | ' + asli : '');
     if (selTeks(sel(row, 'Catatan')) !== isi) {
+      hasil.ditolakBaru++;
       r.tulis.push({ baris: no, sel: susun(r, (c) => (c.judul === 'Catatan' ? isi : null)) });
       r.warna.push({ baris: no, merah: true });
     }
@@ -468,22 +473,25 @@ async function bandingkan(
     const nilai = nilaiDariSheet();
     const sheetMenang = !!nilai && Number.isFinite(tSheet) && tSheet > tApp;
     hasil.konflik++;
+    let pemenang: 'sheet' | 'app' = sheetMenang ? 'sheet' : 'app';
+    if (sheetMenang) {
+      const sebelum = { ditolak: hasil.ditolak, ditolakBaru: hasil.ditolakBaru };
+      if (!(await pakaiSheet(nilai!))) {
+        // isi sheet ditolak validasi → versi aplikasi yang dipakai
+        r.tulis = r.tulis.filter((w) => w.baris !== no);
+        r.warna = r.warna.filter((w) => w.baris !== no);
+        Object.assign(hasil, sebelum);
+        pemenang = 'app';
+        pakaiApp();
+      }
+    } else pakaiApp();
     await db.from('sinkron_konflik').insert({
       tabel: tab.tabel,
       record_id: id,
       nilai_app: keObjek(tab, (j) => tab.kolom[j].ke(lama, ctx)),
       nilai_sheet: keObjek(tab, (j) => sel(row, tab.kolom[j].judul)),
-      pemenang: sheetMenang ? 'sheet' : 'app',
+      pemenang,
     });
-    if (sheetMenang) {
-      if (!(await pakaiSheet(nilai!))) {
-        // isi sheet ditolak validasi → versi aplikasi yang dipakai
-        r.tulis = r.tulis.filter((w) => w.baris !== no);
-        r.warna = r.warna.filter((w) => w.baris !== no);
-        hasil.ditolak--;
-        pakaiApp();
-      }
-    } else pakaiApp();
   }
 
   /* --- baris database yang tidak ada di sheet --- */
