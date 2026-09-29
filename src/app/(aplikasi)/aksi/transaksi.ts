@@ -1,6 +1,7 @@
 'use server';
 
-import { BUKTI_MAKS_BYTE, BUKTI_TIPE, kategoriUntuk, METODE } from '@/lib/konstanta';
+import { BATAS_PERSETUJUAN, BUKTI_MAKS_BYTE, BUKTI_TIPE, KATEGORI_GAJI, kategoriUntuk, METODE } from '@/lib/konstanta';
+import { rp } from '@/lib/format';
 import {
   type Hasil,
   Tolak,
@@ -42,7 +43,29 @@ export async function simpanTransaksi(form: FormData): Promise<Hasil> {
       if (bukti.size > BUKTI_MAKS_BYTE) throw new Tolak('Ukuran bukti maksimal 8 MB.');
     }
 
+    const staf = saya.peran === 'staf';
+    if (staf && d.kategori === KATEGORI_GAJI) throw new Tolak('Kategori gaji hanya bisa dicatat pemilik atau admin.');
+
     const db = await klienServer();
+
+    // Pengeluaran staf di atas batas → antrean persetujuan pemilik, belum masuk pembukuan.
+    if (staf && !id && tipe === 'keluar' && d.nominal > BATAS_PERSETUJUAN) {
+      const { tipe: _t, ...isi } = d; // eslint-disable-line @typescript-eslint/no-unused-vars
+      const { data, error } = await db.from('pengajuan').insert({ ...isi, diajukan_oleh: saya.id }).select('id').single();
+      if (error || !data) return { galat: pesanGalat(error) };
+      if (bukti) {
+        const path = `pengajuan/${data.id}/${Date.now()}-${bukti.name.replace(/[^\w.\-]+/g, '_').slice(-80) || 'bukti'}`;
+        const up = await klienAdmin().storage.from('bukti').upload(path, await bukti.arrayBuffer(), { contentType: bukti.type });
+        // Kolom bukti pengajuan diisi server (service role) — staf tidak punya izin ubah pengajuan.
+        if (!up.error) await klienAdmin().from('pengajuan').update({ bukti_url: path, bukti_nama: bukti.name.slice(0, 200) }).eq('id', data.id);
+      }
+      segarkan();
+      return {
+        ok: true,
+        pesan: `Di atas ${rp(BATAS_PERSETUJUAN)} — diajukan ke pemilik. Tercatat setelah disetujui (lihat Kontrol → Persetujuan).`,
+      };
+    }
+
     let trxId = id;
     if (id) {
       const { data, error } = await db.from('transaksi').update(d).eq('id', id).select('id');

@@ -9,7 +9,7 @@ import 'server-only';
  */
 import { randomUUID } from 'node:crypto';
 import { bulanIni, bulanLabel, geserBulan, rp, tambahHari, tanggalValid } from '@/lib/format';
-import { JENIS_PAJAK, JENIS_REKENING, kategoriUntuk, METODE } from '@/lib/konstanta';
+import { BATAS_PERSETUJUAN, JENIS_PAJAK, JENIS_REKENING, KATEGORI_GAJI, kategoriUntuk, METODE } from '@/lib/konstanta';
 import { sisaTagihan, type DataKeuangan } from '@/lib/hitung';
 import type { Aset, Klien, Peran, Rekening, Tagihan, Transaksi, UtangVendor, Vendor } from '@/lib/tipe-db';
 import { cariSatu, skorCocok, type HasilCari } from './cocok';
@@ -106,11 +106,18 @@ export function rencanakan(aksiMentah: unknown, k: Konteks) {
     const daftar = kategoriUntuk(tipe);
     const cocok = daftar.find((x) => x.toLowerCase() === s.toLowerCase());
     if (!cocok) throw new Tolak(`Kategori "${s}" tidak ada untuk uang ${tipe}`);
+    if (!bolehKelola && cocok === KATEGORI_GAJI) throw new Tolak('Kategori gaji hanya bisa dicatat pemilik atau admin');
     return cocok;
+  };
+
+  const cekBatasStaf = (tipe: string, nominal: number) => {
+    if (!bolehKelola && tipe === 'keluar' && nominal > BATAS_PERSETUJUAN)
+      throw new Tolak(`Pengeluaran di atas ${rp(BATAS_PERSETUJUAN)} harus diajukan lewat tombol "Catat transaksi" — masuk antrean persetujuan pemilik`);
   };
 
   const trxBaru = (t: Omit<Transaksi, 'id' | 'vendor_id' | 'ppn' | 'pph_dipotong' | 'bukti_url' | 'bukti_nama' | 'dibuat_pada' | 'diubah_pada' | 'sheet_diubah' | 'sheet_sumber' | 'arsip'>) => {
     cekTutup(t.tanggal);
+    cekBatasStaf(t.tipe, t.nominal);
     const id = randomUUID();
     const data = { ...t };
     ops.push({ op: 'insert', tabel: 'transaksi', id, data });
@@ -148,7 +155,10 @@ export function rencanakan(aksiMentah: unknown, k: Konteks) {
       if (!bolehKelola && t.dibuat_oleh !== k.pengguna.id) throw new Tolak(`"${t.keterangan}" bukan transaksi buatanmu — hanya pemilik/admin yang boleh mengubahnya`);
       cekTutup(t.tanggal);
       const ubah: Record<string, unknown> = {};
-      if (ada(a.nominal)) ubah.nominal = intPositif(a.nominal);
+      if (ada(a.nominal)) {
+        ubah.nominal = intPositif(a.nominal);
+        cekBatasStaf(t.tipe, ubah.nominal as number);
+      }
       if (ada(a.tanggal)) ubah.tanggal = tanggal(a.tanggal, t.tanggal);
       if (ada(a.kategori)) ubah.kategori = kategori(t.tipe, a.kategori);
       if (ada(a.keterangan)) ubah.keterangan = str(a.keterangan, 120);

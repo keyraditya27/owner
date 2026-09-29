@@ -13,7 +13,7 @@ Konteks bisnis dan aturan kode ada di `CLAUDE.md`. Urutan pembangunan ada di `pr
 | — | Impor data Juni–September | ✅ skrip siap (`npm run impor`) |
 | 3 | Chat AI dengan aksi (Gemini, lewat server) | ✅ |
 | 4 | Aset & Inventaris, Pajak, Laporan + CSV & cetak PDF | ✅ |
-| 5 | Hak akses, tutup buku, riwayat, persetujuan, backup | belum |
+| 5 | Hak akses, tutup buku, riwayat, persetujuan, backup | ✅ |
 | 6 | Sinkron Google Sheets | belum |
 
 ## Menyiapkan database (sekali saja)
@@ -26,6 +26,7 @@ Di Supabase → SQL Editor, jalankan berurutan:
 4. `schema-tahap2.sql` — **wajib**. Isinya: audit log otomatis untuk semua tabel, bucket `bukti` (privat), dan dua perbaikan: staf tidak bisa mencatat transaksi karena pemicu antrean sheet, dan kunci tutup buku yang bisa diakali dengan mengganti tanggal.
 
 5. `schema-tahap3.sql` — fungsi yang menjalankan perubahan dari chat AI dalam **satu transaksi** (semua atau tidak sama sekali) dan tombol **Batalkan**.
+6. `schema-tahap5.sql` — hak akses per peran, tutup buku, antrean persetujuan pengeluaran, bucket `backup`.
 
 Semua file aman dijalankan ulang. Semuanya sudah diuji di Postgres 16.
 
@@ -73,6 +74,46 @@ Buka `/mulai` untuk membuat akun **pemilik**. Halaman ini hanya bisa dipakai sek
 ## Menambah anggota tim
 
 Login sebagai pemilik → menu **Tim** → isi nama, email, password sementara, dan peran (staf/admin). Berikan email dan password sementara langsung ke orangnya.
+
+Di tabel anggota, pemilik bisa mengubah peran atau **Nonaktifkan** seseorang (mis. yang resign). Akun nonaktif langsung tidak bisa membuka aplikasi; datanya tetap ada.
+
+## Hak akses
+
+Semua aturan ini dijaga di database (RLS + trigger), bukan hanya disembunyikan di tampilan — berlaku juga untuk chat AI dan skrip.
+
+| | Pemilik | Admin | Staf |
+|---|---|---|---|
+| Lihat data operasional | ✓ | ✓ | ✓ kecuali gaji |
+| Catat transaksi | ✓ | ✓ | ✓ (bukan gaji); pengeluaran > Rp5 jt lewat persetujuan |
+| Ubah transaksi | ✓ | ✓ | hanya buatannya sendiri |
+| Hapus transaksi | ✓ | ✓ | ✗ |
+| Klien, tagihan, rekening, vendor, aset, pajak | ✓ | ✓ | ✗ |
+| Hapus data perusahaan | ✓ | ✗ | ✗ |
+| Setujui / tolak pengeluaran staf | ✓ | ✗ | ✗ |
+| Tutup buku | ✓ | ✓ | ✗ |
+| Buka kembali periode tertutup | ✓ | ✗ | ✗ |
+| Riwayat perubahan, backup, Tim | ✓ | ✗ | ✗ |
+
+Semuanya ada di menu **Kontrol** (tab yang tampil menyesuaikan peran).
+
+## Backup & memulihkan data
+
+**Otomatis:** Cron Vercel (`vercel.json`) memanggil `/api/cron/backup` setiap **Senin 01.00 WIB**. Seluruh isi database — termasuk gaji dan riwayat perubahan — disimpan sebagai JSON di bucket privat `backup`. Wajib isi `CRON_SECRET` di Vercel → Environment Variables (teks acak panjang); tanpa itu endpoint menolak semua panggilan.
+
+**Manual:** Kontrol → Backup → **Backup sekarang**. Di tab yang sama, file backup bisa diunduh (hanya pemilik).
+
+**Memulihkan:**
+
+1. Siapkan database: jalankan semua file SQL di atas (ke proyek Supabase baru kalau yang lama rusak).
+2. Buat ulang akun lewat `/mulai` (pemilik) dan halaman Tim — akun login tidak ikut backup. Rujukan ke pengguna yang tidak ada akan dikosongkan.
+3. Unduh file backup, taruh di folder proyek, isi `.env.local` dengan kunci Supabase tujuan, lalu:
+
+```
+npm run pulihkan -- arl-backup-2026-10-05-18-00.json --coba   # lihat dulu, tidak menulis apa pun
+npm run pulihkan -- arl-backup-2026-10-05-18-00.json          # pulihkan
+```
+
+Baris yang sudah ada tidak ditimpa, jadi aman dijalankan ulang. Tutup buku dipulihkan paling akhir supaya tidak menghalangi transaksi yang dipulihkan. File backup berisi data gaji — simpan hanya di tempat pribadi.
 
 ## Memasang di HP
 

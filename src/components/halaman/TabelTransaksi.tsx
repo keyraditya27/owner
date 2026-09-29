@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element -- thumbnail bukti dari signed URL */
 import { useMemo, useState } from 'react';
 import { rp, tgl } from '@/lib/format';
-import { SEMUA_KATEGORI } from '@/lib/konstanta';
+import { KATEGORI_GAJI, SEMUA_KATEGORI } from '@/lib/konstanta';
 import { totalTipe } from '@/lib/hitung';
 import type { Transaksi } from '@/lib/tipe-db';
 import { usePusat } from '@/components/form/PusatForm';
@@ -42,7 +42,7 @@ export default function TabelTransaksi({
         <div className="mb-3.5 flex flex-wrap items-center gap-2 [&>*]:!w-auto [&>*]:min-w-[135px] [&>input]:flex-1 [&>select]:!py-[7px] [&>select]:!text-[12.5px]">
           <select value={fKat} onChange={(e) => setFKat(e.target.value)} aria-label="Saring kategori">
             <option value="">Semua kategori</option>
-            {SEMUA_KATEGORI.map((k) => (
+            {SEMUA_KATEGORI.filter((k) => bolehKelola || k !== KATEGORI_GAJI).map((k) => (
               <option key={k}>{k}</option>
             ))}
           </select>

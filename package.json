@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "ikon": "node scripts/buat-ikon.mjs",
-    "impor": "node scripts/impor-data.mjs"
+    "impor": "node scripts/impor-data.mjs",
+    "pulihkan": "node scripts/pulihkan-backup.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

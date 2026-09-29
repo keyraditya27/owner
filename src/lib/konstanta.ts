@@ -62,3 +62,9 @@ export const JENIS_PAJAK: Record<string, { setor: number; lapor: number | 'akhir
 /** Bukti transfer: tipe & ukuran yang diterima. */
 export const BUKTI_TIPE = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'application/pdf'];
 export const BUKTI_MAKS_BYTE = 8 * 1024 * 1024;
+
+/** Pengeluaran staf DI ATAS angka ini masuk antrean persetujuan pemilik (dijaga juga oleh trigger di schema-tahap5.sql). */
+export const BATAS_PERSETUJUAN = 5_000_000;
+
+/** Kategori yang tidak boleh dilihat/dicatat staf (CLAUDE.md: staf tidak bisa melihat gaji). */
+export const KATEGORI_GAJI = 'Gaji & fee tim';

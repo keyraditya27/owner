@@ -2,7 +2,7 @@
  * Struktur halaman & sub-tab — mengikuti tabel "Struktur halaman" di CLAUDE.md
  * dan urutan menu di prototipe arl-keuangan-v7.html.
  */
-export type Ikon = 'bar' | 'daftar' | 'user' | 'dompet' | 'lonceng' | 'dok' | 'tim';
+export type Ikon = 'bar' | 'daftar' | 'user' | 'dompet' | 'lonceng' | 'dok' | 'tim' | 'kunci';
 
 export type SubTab = { kunci: string; label: string };
 
@@ -101,6 +101,26 @@ export const HALAMAN: Halaman[] = [
     ],
   },
 ];
+
+/** Halaman Kontrol (Tahap 5) — di luar enam menu utama. Tab yang tampil tergantung peran. */
+export const KONTROL: Halaman = {
+  href: '/kontrol',
+  label: 'Kontrol',
+  labelPendek: 'Kontrol',
+  ikon: 'kunci',
+  judul: 'Kontrol',
+  badge: 'Pengaman',
+  tabs: [
+    { kunci: 'persetujuan', label: 'Persetujuan' },
+    { kunci: 'tutupbuku', label: 'Tutup Buku' },
+    { kunci: 'riwayat', label: 'Riwayat Perubahan' },
+    { kunci: 'backup', label: 'Backup' },
+  ],
+};
+
+/** Tab Kontrol yang boleh dibuka tiap peran. */
+export const tabKontrolUntuk = (peran: 'pemilik' | 'admin' | 'staf') =>
+  peran === 'pemilik' ? KONTROL.tabs : peran === 'admin' ? KONTROL.tabs.slice(0, 2) : KONTROL.tabs.slice(0, 1);
 
 export const halamanDari = (href: string) => HALAMAN.find((h) => h.href === href)!;
 

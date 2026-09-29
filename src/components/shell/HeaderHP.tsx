@@ -12,7 +12,7 @@ import { keluar } from '@/app/login/actions';
  * Bilah atas khusus HP/tablet (di bawah 1080px): logo + menu akun.
  * Menu halaman ada di NavBawah supaya mudah dijangkau jempol.
  */
-export default function HeaderHP({ pengguna }: { pengguna: PenggunaAktif }) {
+export default function HeaderHP({ pengguna, menunggu = 0 }: { pengguna: PenggunaAktif; menunggu?: number }) {
   const [buka, setBuka] = useState(false);
   const path = usePathname();
   return (
@@ -27,6 +27,7 @@ export default function HeaderHP({ pengguna }: { pengguna: PenggunaAktif }) {
           className="rounded-lg border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-bold"
         >
           {pengguna.nama.split(' ')[0]}
+          {menunggu > 0 ? <span className="ml-1.5 rounded-xl bg-amber px-1.5 text-[10px]">{menunggu}</span> : null}
         </button>
       </div>
       {buka ? (
@@ -34,6 +35,16 @@ export default function HeaderHP({ pengguna }: { pengguna: PenggunaAktif }) {
           <span className="text-langit-5">
             {pengguna.email} · {pengguna.peran}
           </span>
+          <Link
+            href="/kontrol"
+            onClick={() => setBuka(false)}
+            className={`flex items-center gap-2 rounded-lg px-2 py-2 no-underline ${
+              path === '/kontrol' ? 'bg-white text-navy' : 'text-langit-1'
+            }`}
+          >
+            <IkonSvg nama="kunci" /> Kontrol
+            {menunggu > 0 ? <span className="rounded-xl bg-amber px-2 text-[10.5px] font-bold text-white">{menunggu}</span> : null}
+          </Link>
           {pengguna.peran === 'pemilik' ? (
             <Link
               href="/tim"

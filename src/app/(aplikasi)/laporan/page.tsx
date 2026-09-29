@@ -8,13 +8,14 @@ import { totalKas, totalPiutang, type DataKeuangan } from '@/lib/hitung';
 import { arusKas, labaRugi, neraca, perKategori } from '@/lib/laporan';
 import { halamanDari, tabAktif } from '@/lib/navigasi';
 import { periodeLabel, ymPatokan, type Periode } from '@/lib/periode';
+import { wajibLogin } from '@/lib/pengguna';
 
 export const metadata = { title: 'Laporan' };
 
 const H = halamanDari('/laporan');
 
 export default async function HalamanLaporan({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
-  const [{ tab }, d, periode] = await Promise.all([searchParams, ambilData(), ambilPeriode()]);
+  const [{ tab }, d, periode, saya] = await Promise.all([searchParams, ambilData(), ambilPeriode(), wajibLogin()]);
   const aktif = tabAktif(H, tab);
   return (
     <>
@@ -38,6 +39,14 @@ export default async function HalamanLaporan({ searchParams }: { searchParams: P
           </>
         }
       />
+      {saya.peran === 'staf' ? (
+        <div className="px-[18px] pt-[22px] lebar:px-9">
+          <Insight jenis="warn" judul="Angka tanpa data gaji" className="!mb-0">
+            Transaksi gaji hanya terlihat oleh pemilik dan admin, jadi laporan di akun ini tidak lengkap. Pakai laporan dari pemilik
+            untuk angka resmi.
+          </Insight>
+        </div>
+      ) : null}
       {aktif === 'neraca' ? <Neraca d={d} p={periode} /> : null}
       {aktif === 'labarugi' ? <LabaRugi d={d} p={periode} /> : null}
       {aktif === 'aruskas' ? <ArusKas d={d} p={periode} /> : null}

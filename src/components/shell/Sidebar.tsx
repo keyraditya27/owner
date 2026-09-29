@@ -11,7 +11,15 @@ import { keluar } from '@/app/login/actions';
 const aktif = (path: string, href: string) => path === href || path.startsWith(href + '/');
 
 /** Sidebar navy desktop — mengikuti <aside> di prototipe v7. Disembunyikan di bawah 1080px. */
-export default function Sidebar({ pengguna, tunggakan = 0 }: { pengguna: PenggunaAktif; tunggakan?: number }) {
+export default function Sidebar({
+  pengguna,
+  tunggakan = 0,
+  menunggu = 0,
+}: {
+  pengguna: PenggunaAktif;
+  tunggakan?: number;
+  menunggu?: number;
+}) {
   const path = usePathname();
   const kelasTombol = (on: boolean) =>
     `flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-[13.5px] no-underline ${
@@ -38,6 +46,18 @@ export default function Sidebar({ pengguna, tunggakan = 0 }: { pengguna: Penggun
             </Link>
           );
         })}
+        <div className="mx-3 my-2 border-t border-white/[.12]" />
+        <Link
+          href="/kontrol"
+          aria-current={aktif(path, '/kontrol') ? 'page' : undefined}
+          className={kelasTombol(aktif(path, '/kontrol'))}
+        >
+          <IkonSvg nama="kunci" className="h-[15px] w-[15px] shrink-0 opacity-85" />
+          Kontrol
+          {menunggu > 0 ? (
+            <span className="ml-auto rounded-xl bg-amber px-2 py-px text-[10.5px] font-bold text-white">{menunggu}</span>
+          ) : null}
+        </Link>
         {pengguna.peran === 'pemilik' ? (
           <Link
             href="/tim"

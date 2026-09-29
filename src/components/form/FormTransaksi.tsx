@@ -4,7 +4,8 @@ import { useState, useTransition } from 'react';
 import Modal from '@/components/Modal';
 import { hapusTransaksi, simpanTransaksi } from '@/app/(aplikasi)/aksi/transaksi';
 import { hariIni } from '@/lib/format';
-import { BUKTI_MAKS_BYTE, kategoriUntuk, METODE } from '@/lib/konstanta';
+import { BATAS_PERSETUJUAN, BUKTI_MAKS_BYTE, KATEGORI_GAJI, kategoriUntuk, METODE } from '@/lib/konstanta';
+import { rp } from '@/lib/format';
 import type { Transaksi } from '@/lib/tipe-db';
 import { Grid, InputRupiah, Isian, PesanGalat } from './Isian';
 import { usePusat } from './PusatForm';
@@ -44,7 +45,8 @@ export default function FormTransaksi({ data }: { data?: Transaksi }) {
   const [bukti, setBukti] = useState<File | null>(null);
   const set = (k: keyof typeof f, v: string) => setF((x) => ({ ...x, [k]: v }));
 
-  const kats = kategoriUntuk(f.tipe);
+  // Staf tidak melihat & tidak mencatat gaji (CLAUDE.md)
+  const kats = kategoriUntuk(f.tipe).filter((k) => bolehKelola || k !== KATEGORI_GAJI);
   const kategori = kats.includes(f.kategori) ? f.kategori : 'Lain-lain';
 
   const simpan = () =>
@@ -61,7 +63,7 @@ export default function FormTransaksi({ data }: { data?: Transaksi }) {
       const h = await simpanTransaksi(fd);
       if (h.galat && !h.ok) return setGalat(h.galat);
       tutup();
-      kabar(h.galat ?? 'Transaksi tersimpan');
+      kabar(h.galat ?? h.pesan ?? 'Transaksi tersimpan');
     });
 
   const hapus = () =>
@@ -158,6 +160,11 @@ export default function FormTransaksi({ data }: { data?: Transaksi }) {
           {data?.bukti_nama ? <div className="mt-1 text-[11.5px] text-muted">Sekarang: {data.bukti_nama}</div> : null}
         </Isian>
       </Grid>
+      {!bolehKelola && !data && f.tipe === 'keluar' && Number(f.nominal) > BATAS_PERSETUJUAN ? (
+        <div className="ins ins-warn !mb-0 mt-3.5">
+          <p>Di atas {rp(BATAS_PERSETUJUAN)}: pengeluaran ini diajukan dulu ke pemilik dan baru masuk pembukuan setelah disetujui.</p>
+        </div>
+      ) : null}
       {kategori === 'Ads budget titipan' ? (
         <div className="ins ins-warn !mb-0 mt-3.5">
           <p>Dana titipan klien dicatat sebagai kewajiban, bukan pendapatan ARL. Pilih rekening budget klien.</p>

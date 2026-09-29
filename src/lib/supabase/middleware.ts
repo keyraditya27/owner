@@ -3,7 +3,8 @@ import { createServerClient } from '@supabase/ssr';
 import { SUPABASE_ANON_KEY, SUPABASE_URL, supabaseSiap } from '@/lib/env';
 
 /** Rute yang boleh dibuka tanpa login. */
-const RUTE_TERBUKA = ['/login', '/mulai', '/offline', '/belum-siap'];
+// /api/cron dijaga CRON_SECRET di route-nya sendiri, bukan sesi login.
+const RUTE_TERBUKA = ['/login', '/mulai', '/offline', '/belum-siap', '/api/cron'];
 
 export async function segarkanSesi(request: NextRequest) {
   const { pathname } = request.nextUrl;

@@ -187,3 +187,23 @@ export type AuditLog = {
   sumber: string | null;
   waktu: string;
 };
+
+export type Pengajuan = {
+  id: string;
+  tanggal: string;
+  nominal: number;
+  kategori: string;
+  keterangan: string;
+  metode: string;
+  rekening_id: string | null;
+  klien_id: string | null;
+  bukti_url: string | null;
+  bukti_nama: string | null;
+  diajukan_oleh: string;
+  status: 'menunggu' | 'disetujui' | 'ditolak';
+  diputus_oleh: string | null;
+  diputus_pada: string | null;
+  alasan: string | null;
+  transaksi_id: string | null;
+  dibuat_pada: string;
+};

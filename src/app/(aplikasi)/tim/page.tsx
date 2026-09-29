@@ -1,6 +1,7 @@
 import Hero from '@/components/halaman/Hero';
 import { wajibPemilik } from '@/lib/pengguna';
 import { klienAdmin } from '@/lib/supabase/admin';
+import AturAnggota from './AturAnggota';
 import FormAnggota from './FormAnggota';
 
 export const metadata = { title: 'Tim' };
@@ -9,7 +10,7 @@ export const dynamic = 'force-dynamic';
 const WARNA_PERAN: Record<string, string> = { pemilik: 'bg-navy', admin: 'bg-biru', staf: 'bg-muted' };
 
 export default async function Tim() {
-  await wajibPemilik();
+  const saya = await wajibPemilik();
   const admin = klienAdmin();
 
   const [{ data: daftar, error }, { data: akun }] = await Promise.all([
@@ -40,6 +41,7 @@ export default async function Tim() {
                   <th>Email</th>
                   <th>Peran</th>
                   <th>Status</th>
+                  <th />
                 </tr>
               </thead>
               <tbody>
@@ -51,6 +53,11 @@ export default async function Tim() {
                       <span className={`pill ${WARNA_PERAN[p.peran] ?? 'bg-muted'}`}>{p.peran}</span>
                     </td>
                     <td>{p.aktif ? 'Aktif' : 'Nonaktif'}</td>
+                    <td className="text-right">
+                      {p.id !== saya.id && p.peran !== 'pemilik' ? (
+                        <AturAnggota id={p.id} nama={p.nama} peran={p.peran} aktif={p.aktif} />
+                      ) : null}
+                    </td>
                   </tr>
                 ))}
               </tbody>
