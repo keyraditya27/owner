@@ -1,0 +1,86 @@
+/* Gaya ARL — disalin dari prototipe arl-keuangan-v7.html. Salin utuh ke <style>. */
+:root{
+  --navy:#0A2540;--sky:#1B6FE3;--horizon:#4FA3F7;--green:#0FB88F;
+  --cream:#F5F7FA;--line:#E3E9F0;--muted:#6B7C93;--amber:#F5A623;--red:#E5484D;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Calibri','Segoe UI',Arial,sans-serif;background:#EEF2F7;color:var(--navy);line-height:1.55;padding:22px 16px}
+.halaman{max-width:1100px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 6px 24px rgba(10,37,64,.08)}
+.num,td.r,.kpi .val{font-variant-numeric:tabular-nums}
+
+/* Hero */
+.hero{background:linear-gradient(135deg,var(--navy) 0%,#123a63 55%,var(--sky) 140%);color:#fff;padding:30px 36px}
+.hero-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.hero-brand{display:flex;align-items:center;gap:11px;font-family:Cambria,Georgia,serif;font-size:17px;font-weight:700;letter-spacing:.5px}
+.hero-brand img{height:40px;width:auto;display:block}
+.hero-brand .langit{color:var(--horizon)}
+.badge{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:6px 14px;border-radius:20px;font-size:12px}
+h1{font-family:Cambria,Georgia,serif;font-size:27px;margin-top:16px;font-weight:700}
+.sub{color:#BBD4F2;font-size:13.5px;margin-top:6px}
+
+/* Seksi */
+section{padding:28px 36px;border-bottom:1px solid var(--line)}
+section:last-child{border-bottom:0}
+.sec-title{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.ic{width:34px;height:34px;border-radius:50%;background:var(--sky);display:flex;align-items:center;justify-content:center;flex:0 0 34px;color:#fff;font-weight:700;font-size:15px}
+.ic svg{width:17px;height:17px;fill:#fff}
+.ic.green{background:var(--green)} .ic.amber{background:var(--amber)} .ic.red{background:var(--red)}
+h2{font-family:Cambria,Georgia,serif;font-size:19px}
+.sec-desc{color:var(--muted);font-size:13px;margin:0 0 18px 46px}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.kpi{background:var(--cream);border:1px solid var(--line);border-top:3px solid var(--sky);border-radius:10px;padding:16px}
+.kpi.hl{border-top-color:var(--green);background:#F0FBF8}
+.kpi.bad{border-top-color:var(--red);background:#FEF3F3}
+.kpi.warn{border-top-color:var(--amber);background:#FEF8EE}
+.kpi .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:700}
+.kpi .val{font-size:20px;font-weight:700;margin-top:6px;font-family:Cambria,Georgia,serif}
+.kpi .note{font-size:11.5px;color:var(--muted);margin-top:3px}
+.up{color:var(--green);font-weight:700}.dn{color:var(--red);font-weight:700}
+
+/* Tabel */
+.gulir{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+thead th{background:var(--navy);color:#fff;padding:10px 8px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+thead th.r,td.r{text-align:right}
+tbody td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:nth-child(even){background:#FAFCFE}
+tfoot td{background:#EDF3FB;font-weight:700;padding:10px 8px;border-top:2px solid var(--navy)}
+.name{font-weight:600}
+.cell-sub{font-size:11.5px;color:var(--muted);font-weight:400}
+
+/* Pill */
+.pill{display:inline-block;padding:2px 9px;border-radius:12px;font-size:10.5px;font-weight:700;color:#fff;white-space:nowrap}
+.p-green{background:var(--green)}.p-sky{background:var(--sky)}.p-amber{background:var(--amber)}
+.p-red{background:var(--red)}.p-gray{background:var(--muted)}.p-navy{background:var(--navy)}
+
+/* Insight */
+.ins{border-left:4px solid var(--sky);background:var(--cream);border-radius:0 10px 10px 0;padding:14px 18px;margin-bottom:12px}
+.ins.good{border-left-color:var(--green);background:#F0FBF8}
+.ins.warn{border-left-color:var(--amber);background:#FEF8EE}
+.ins.bad{border-left-color:var(--red);background:#FEF3F3}
+.ins h4{font-size:14px;margin-bottom:3px;font-family:Cambria,Georgia,serif}
+.ins p{font-size:13px;color:#3D4F63}
+
+/* Tombol */
+.btn{display:inline-block;background:var(--sky);color:#fff;border:0;border-radius:8px;padding:9px 15px;font-weight:700;font-size:13px;text-decoration:none;cursor:pointer}
+.btn:hover{background:#1560CC}
+.btn.ghost{background:#fff;color:var(--navy);border:1px solid var(--line)}
+.btn.on-hero{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);color:#fff}
+
+/* Layar kecil */
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:620px){
+  body{padding:10px}
+  .hero{padding:22px 18px} section{padding:22px 18px}
+  .kpis{grid-template-columns:1fr} .sec-desc{margin-left:0}
+}
+
+/* Cetak / PDF */
+@media print{
+  body{background:#fff;padding:0} .halaman{box-shadow:none;border-radius:0;max-width:none}
+  .btn{display:none}
+  .hero,.kpi,thead th,tfoot td,.ins,.pill{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  section{break-inside:avoid}
+}
