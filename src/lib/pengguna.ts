@@ -21,20 +21,16 @@ export type PenggunaAktif = {
  */
 export const penggunaSaatIni = cache(async (): Promise<PenggunaAktif | null> => {
   const supabase = await klienServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+  // getClaims() memverifikasi token; dengan kunci asimetris tanpa panggilan ke server Auth.
+  const { data: klaim } = await supabase.auth.getClaims();
+  const id = klaim?.claims?.sub;
+  if (!id) return null;
 
   // Butuh aturan "baca_pengguna" dari schema-perbaikan-tahap1.sql.
-  const { data } = await supabase
-    .from('pengguna')
-    .select('nama, peran, aktif')
-    .eq('id', user.id)
-    .maybeSingle();
+  const { data } = await supabase.from('pengguna').select('nama, peran, aktif').eq('id', id).maybeSingle();
   if (!data || !data.aktif) return null;
 
-  return { id: user.id, email: user.email ?? '', nama: data.nama, peran: data.peran as Peran };
+  return { id, email: String(klaim.claims.email ?? ''), nama: data.nama, peran: data.peran as Peran };
 });
 
 /** Untuk halaman di dalam aplikasi: wajib login dan terdaftar aktif. */

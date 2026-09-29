@@ -67,7 +67,7 @@ Ikuti prototipe `arl-keuangan-v7.html` persis. Ringkasnya:
 | Pajak | Kewajiban · Kalkulator · PPh Badan · Panduan |
 | Laporan | Neraca · Laba Rugi · Arus Kas · Per Kategori |
 
-Panel chat AI menempel di kanan, selalu terlihat. Di bawah 1080px (HP/tablet): sidebar jadi bilah atas + menu bawah, chat dibuka lewat tombol melayang sebagai layar penuh.
+Chat AI berupa **pop-up**: tombol chat melayang di kanan bawah di semua ukuran layar. Diklik → desktop: jendela mengambang 400px di kanan bawah; HP/tablet: layar penuh. Tombol kecilkan (atau Esc) mengembalikannya ke tombol, isi chat tidak hilang. Di bawah 1080px: sidebar jadi bilah atas + menu bawah.
 
 ## Chat AI
 

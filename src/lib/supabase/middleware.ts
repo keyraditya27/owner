@@ -27,10 +27,11 @@ export async function segarkanSesi(request: NextRequest) {
     },
   });
 
-  // getUser() memverifikasi token ke server Supabase — jangan diganti getSession().
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims() memverifikasi tanda tangan token (sekaligus menyegarkan sesi yang kedaluwarsa).
+  // Proyek Supabase dengan kunci tanda tangan asimetris memeriksanya di sini tanpa bolak-balik
+  // ke server Auth; kunci simetris lama otomatis jatuh ke getUser(). Jangan diganti getSession().
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims?.sub ? data.claims : null;
 
   if (!user && !terbuka) {
     // API dipanggil lewat fetch — jawab 401, jangan dialihkan ke halaman login.
