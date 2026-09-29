@@ -15,12 +15,28 @@ const URL_API = (process.env.GOOGLE_SHEETS_BASE_URL || 'https://sheets.googleapi
 
 export type KonfigSheet = { sheetId: string; email: string; kunci: string };
 
-/** null kalau env Google belum lengkap — sinkron dimatikan tanpa error. */
+/**
+ * null kalau env Google belum lengkap — sinkron dimatikan tanpa error.
+ * Dua cara mengisi kredensial:
+ *  - GOOGLE_SERVICE_ACCOUNT_JSON: tempel SELURUH isi file JSON service account (paling mudah), atau
+ *  - GOOGLE_SERVICE_ACCOUNT_EMAIL + GOOGLE_PRIVATE_KEY terpisah.
+ */
 export function konfigSheet(): KonfigSheet | null {
   const sheetId = process.env.GOOGLE_SHEET_ID?.trim();
-  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim();
+  let email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim();
+  let kunciMentah = process.env.GOOGLE_PRIVATE_KEY;
+  const json = process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim();
+  if (json) {
+    try {
+      const j = JSON.parse(json) as { client_email?: string; private_key?: string };
+      email = email || j.client_email?.trim();
+      kunciMentah = kunciMentah || j.private_key;
+    } catch {
+      console.error('GOOGLE_SERVICE_ACCOUNT_JSON bukan JSON yang valid — tempel isi file apa adanya');
+    }
+  }
   // Vercel/.env menyimpan private key dengan "\n" literal — kembalikan jadi baris baru.
-  const kunci = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n').trim();
+  const kunci = kunciMentah?.replace(/\\n/g, '\n').trim();
   if (!sheetId || !email || !kunci) return null;
   return { sheetId, email, kunci };
 }
