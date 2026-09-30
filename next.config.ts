@@ -16,6 +16,12 @@ const nextConfig: NextConfig = {
           { key: 'Service-Worker-Allowed', value: '/' },
         ],
       },
+      {
+        // Verifikasi aplikasi Android (APK/TWA): Android membaca file ini untuk membuka
+        // aplikasi layar penuh tanpa bilah alamat. Harus JSON dan bisa dibuka tanpa login.
+        source: '/.well-known/assetlinks.json',
+        headers: [{ key: 'Content-Type', value: 'application/json' }],
+      },
     ];
   },
 };

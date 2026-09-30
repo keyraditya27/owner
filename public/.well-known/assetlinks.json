@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.arahruanglangit.keuangan",
+      "sha256_cert_fingerprints": [
+        "DE:9D:CE:42:77:61:8F:D0:3F:C3:06:FF:30:19:EA:8E:37:2D:5B:BE:72:A2:12:65:C6:00:C0:FE:3B:4D:95:31"
+      ]
+    }
+  }
+]
