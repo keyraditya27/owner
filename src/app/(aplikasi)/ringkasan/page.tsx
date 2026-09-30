@@ -2,9 +2,12 @@ import Link from 'next/link';
 import KepalaHalaman from '@/components/halaman/KepalaHalaman';
 import TabelTransaksi from '@/components/halaman/TabelTransaksi';
 import { TombolForm } from '@/components/form/PusatForm';
+import TombolAksi from '@/components/halaman/TombolAksi';
+import { catatGaji } from '@/app/(aplikasi)/aksi/gaji';
+import { gajiBelumDibayar } from '@/lib/gaji';
 import { Blok, GulirX, Insight, Kosong, Kpi, Kpis, Pill, Seksi, Sub } from '@/components/ui';
 import { ambilData, ambilPeriode } from '@/lib/data';
-import { bulanLabel, hariSelisih, pct, rp, rpS, tgl } from '@/lib/format';
+import { bulanIni, bulanLabel, hariSelisih, pct, rp, rpS, tgl } from '@/lib/format';
 import {
   danaTitipan,
   deadlineSetor,
@@ -57,11 +60,46 @@ export default async function Ringkasan({ searchParams }: { searchParams: Promis
         }
         lencana={{ piutang: jumlahTelat || '', utang: jumlahUtang || '' }}
       />
+      <PengingatGaji d={d} />
       {aktif === 'ikhtisar' ? <Ikhtisar d={d} p={periode} /> : null}
       {aktif === 'kas' ? <Kas d={d} p={periode} /> : null}
       {aktif === 'piutang' ? <Piutang d={d} /> : null}
       {aktif === 'utang' ? <Utang d={d} /> : null}
     </>
+  );
+}
+
+/**
+ * Pengingat gaji rutin — muncul sejak tanggal 1 sampai gaji bulan itu tercatat.
+ * Staf tidak pernah melihatnya: tabel karyawan hanya terbaca pemilik & admin (RLS).
+ */
+async function PengingatGaji({ d }: { d: DataKeuangan }) {
+  const belum = await gajiBelumDibayar(d.transaksi);
+  if (!belum.length) return null;
+  return (
+    <Blok>
+      <div className="ins ins-warn !mb-0">
+        <h4>Gaji {bulanLabel(bulanIni())} belum dicatat</h4>
+        <div className="mt-2 flex flex-col gap-2">
+          {belum.map((k) => (
+            <div key={k.id} className="flex flex-wrap items-center justify-between gap-2 text-[13px]">
+              <span>
+                <b>{k.nama}</b>
+                {k.posisi ? <span className="text-muted"> · {k.posisi}</span> : null} — {rp(k.gaji_pokok)}
+              </span>
+              <TombolAksi
+                aksi={catatGaji.bind(null, k.id)}
+                varian="btn"
+                className="btn-sm"
+                konfirmasi={`Catat gaji ${k.nama} ${rp(k.gaji_pokok)} hari ini (kategori Gaji & fee tim)?`}
+              >
+                Catat gaji
+              </TombolAksi>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Blok>
   );
 }
 

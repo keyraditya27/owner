@@ -3,8 +3,9 @@ import { createServerClient } from '@supabase/ssr';
 import { SUPABASE_ANON_KEY, SUPABASE_URL, supabaseSiap } from '@/lib/env';
 
 /** Rute yang boleh dibuka tanpa login. */
-// /api/cron dijaga CRON_SECRET di route-nya sendiri, bukan sesi login.
-const RUTE_TERBUKA = ['/login', '/mulai', '/offline', '/belum-siap', '/api/cron'];
+// /api/cron & /api/kalender dijaga token rahasia di route-nya sendiri, bukan sesi login
+// (Vercel Cron dan Google Calendar tidak bisa login).
+const RUTE_TERBUKA = ['/login', '/mulai', '/offline', '/belum-siap', '/api/cron', '/api/kalender'];
 
 export async function segarkanSesi(request: NextRequest) {
   const { pathname } = request.nextUrl;

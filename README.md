@@ -150,6 +150,12 @@ Sheet `KEUANGAN ARL` jadi cermin dua arah database. Spesifikasi di `integrasi-go
 - Kolom Bukti berisi tautan ke aplikasi (`/bukti/<id>`), bukan ke file. Pembukanya harus login, dan file dibuka lewat signed URL 60 detik.
 - Tab Ringkasan berisi rumus yang ditulis sekali saat dibuat. Aplikasi tidak pernah membacanya.
 
+## Gaji rutin & Google Calendar
+
+**Gaji rutin** (halaman Tim, pemilik): isi nama & gaji per bulan tiap anggota yang digaji. Mulai tanggal 1 tiap bulan, Ringkasan menampilkan pengingat untuk gaji yang belum tercatat, dengan tombol **Catat gaji** (tercatat hari itu, kategori *Gaji & fee tim*, dari rekening pertama). Gaji yang dicatat lewat form atau chat juga terhitung — cocokkan dengan nama di keterangan. Data gaji hanya terbaca pemilik & admin dan tidak pernah dikirim ke Google Sheet.
+
+**Google Calendar** (halaman Tim → Google Calendar): salin tautan kalender, lalu di calendar.google.com → *Other calendars* → **+** → *From URL*. Isinya jadwal tagih bulanan tiap klien aktif (tanggal tagih + nilai bulanan), jatuh tempo tagihan yang belum lunas, dan pengingat gaji tanggal 1 (tanpa nominal). Tautan dibuat dari `CRON_SECRET` + `NEXT_PUBLIC_APP_URL` — kalau `CRON_SECRET` diganti, tautan lama mati. Google memperbarui kalender langganan beberapa jam sekali.
+
 ## Memasang di HP
 
 Setelah aplikasi online (Vercel), buka alamatnya di HP:
