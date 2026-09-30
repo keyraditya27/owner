@@ -8,6 +8,6 @@ export async function middleware(request: NextRequest) {
 export const config = {
   // Lewati file statis, ikon PWA, manifest, dan service worker.
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|ikon/|logo/|.*\\.(?:png|jpg|jpeg|svg|webp|ico)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|ikon/|logo/|\\.well-known/|.*\\.(?:png|jpg|jpeg|svg|webp|ico)$).*)',
   ],
 };

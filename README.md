@@ -167,6 +167,11 @@ Ikon ARL muncul di layar utama dan aplikasi terbuka layar penuh tanpa bilah brow
 
 Pemasangan PWA butuh HTTPS, jadi tidak jalan di `http://localhost` dari HP — pakai alamat Vercel.
 
+
+### APK Android
+
+APK dibuat dengan PWABuilder (Trusted Web Activity): paket `com.arahruanglangit.keuangan`, membuka `https://owner-five-psi.vercel.app/ringkasan` layar penuh. Verifikasinya di `public/.well-known/assetlinks.json` (sidik jari SHA-256 kunci tanda tangan). Kunci tanda tangan (`signing.keystore` + kata sandinya) disimpan pemilik — dibutuhkan untuk membuat versi APK berikutnya atau mengunggah ke Play Store. **Kalau alamat aplikasi berganti (mis. pakai domain sendiri), APK harus dibuat ulang.** Isi aplikasi tetap dari server, jadi pembaruan fitur tidak butuh APK baru.
+
 ## Perintah
 
 | Perintah | Guna |
