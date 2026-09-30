@@ -4,7 +4,7 @@
  * murni dari kolom tabel aset.
  * Kelompok mengikuti Pasal 11 UU PPh jo. PMK 72/2023.
  */
-import { bulanIni } from '@/lib/format';
+import { bulanIni, geserBulan } from '@/lib/format';
 import type { Aset } from '@/lib/tipe-db';
 
 export const KELOMPOK: Record<string, { label: string; th: number; gl: number; sm: number | null }> = {
@@ -71,6 +71,13 @@ export const asetTetap = (arr: Aset[]) => asetAktif(arr).filter((a) => a.jenis !
 export const totalPerolehan = (arr: Aset[]) => asetTetap(arr).reduce((s, a) => s + (a.harga_perolehan || 0), 0);
 export const totalAkumulasi = (arr: Aset[], ym?: string) => asetTetap(arr).reduce((s, a) => s + akumulasi(a, ym), 0);
 export const totalNilaiBuku = (arr: Aset[], ym?: string) => asetTetap(arr).reduce((s, a) => s + nilaiBuku(a, ym), 0);
+
+/**
+ * Beban penyusutan dalam rentang bulan (inklusif) = akumulasi di akhir − akumulasi sebelum awal.
+ * Aset yang dibeli di tengah rentang hanya disusutkan sejak bulan perolehannya.
+ */
+export const susutAntara = (arr: Aset[], dariYM: string, sampaiYM: string) =>
+  Math.max(0, totalAkumulasi(arr, sampaiYM) - totalAkumulasi(arr, geserBulan(dariYM, -1)));
 
 /** Beban penyusutan bulan ini (aset yang masih dalam masa manfaat). */
 export const susutBulanIni = (arr: Aset[]) =>

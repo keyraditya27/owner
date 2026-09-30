@@ -3,11 +3,12 @@
  * pajakTabTahunan, dan pphBadan() dari prototipe v7. Dipakai halaman Laporan,
  * halaman Pajak, dan unduhan CSV supaya angkanya selalu sama.
  */
-import { BUKAN_BEBAN, KATEGORI_ASET_TETAP, KATEGORI_TITIPAN, KOREKSI_FISKAL } from '@/lib/konstanta';
-import { asetTetap, susutBulanan, totalAkumulasi, totalNilaiBuku, totalPerolehan } from '@/lib/aset';
+import { BUKAN_BEBAN, KATEGORI_ASET_TETAP, KATEGORI_KASBON, KATEGORI_KASBON_KEMBALI, KATEGORI_TITIPAN, KOREKSI_FISKAL } from '@/lib/konstanta';
+import { susutAntara, totalAkumulasi, totalNilaiBuku, totalPerolehan } from '@/lib/aset';
 import {
   danaTitipan,
   pajakBelumSetor,
+  piutangKasbon,
   saldoRekening,
   tagihanTerbuka,
   totalKas,
@@ -17,6 +18,7 @@ import {
   utangTerbuka,
   type DataKeuangan,
 } from '@/lib/hitung';
+import { bulanIni } from '@/lib/format';
 import { dalamPeriode, ymPatokan, type Periode } from '@/lib/periode';
 
 /* ---------------------------------------------------------------- NERACA */
@@ -24,11 +26,12 @@ export function neraca(d: DataKeuangan, p: Periode) {
   const ym = ymPatokan(p);
   const kas = totalKas(d);
   const piutang = totalPiutang(d);
+  const kasbon = piutangKasbon(d);
   const nb = totalNilaiBuku(d.aset, ym);
   const titipan = Math.max(0, danaTitipan(d));
   const utangV = totalUtang(d);
   const utangP = totalUtangPajak(d);
-  const totalAset = kas + piutang + nb;
+  const totalAset = kas + piutang + kasbon + nb;
   const totalLiab = titipan + utangV + utangP;
   const modal = d.perusahaan?.modal_disetor || 0;
   const tanpaRekening = d.transaksi.filter((t) => !t.rekening_id);
@@ -39,6 +42,7 @@ export function neraca(d: DataKeuangan, p: Periode) {
       : null,
     piutang,
     jumlahTagihan: tagihanTerbuka(d).length,
+    kasbon,
     perolehan: totalPerolehan(d.aset),
     akumulasi: totalAkumulasi(d.aset, ym),
     nilaiBuku: nb,
@@ -64,14 +68,24 @@ export function labaRugi(d: DataKeuangan, p: Periode) {
   arr.forEach((t) => {
     if (t.tipe === 'masuk') {
       if (t.kategori === KATEGORI_TITIPAN) return; // dana titipan = kewajiban, bukan pendapatan
+      if (t.kategori === KATEGORI_KASBON_KEMBALI) return; // kasbon kembali = piutang tertagih, bukan pendapatan
       pend[t.kategori] = (pend[t.kategori] || 0) + t.nominal;
     } else if (BUKAN_BEBAN.includes(t.kategori)) prive += t.nominal; // pengurang ekuitas
     else if (t.kategori === KATEGORI_ASET_TETAP) belanjaAset += t.nominal; // masuk lewat penyusutan
+    else if (t.kategori === KATEGORI_KASBON) return; // piutang ke tim, tampil di neraca
     else beb[t.kategori] = (beb[t.kategori] || 0) + t.nominal;
   });
   const bulan =
     p.mode === 'tahun' ? 12 : p.mode === 'bulan' ? 1 : Math.max(1, new Set(d.transaksi.map((t) => t.tanggal.slice(0, 7))).size);
-  const susut = asetTetap(d.aset).reduce((s, a) => s + susutBulanan(a), 0) * bulan;
+  // Penyusutan dihitung sejak bulan perolehan, bukan susut-bulanan × jumlah bulan
+  // (aset yang dibeli September tidak ikut disusutkan untuk Juni–Agustus).
+  const kini = bulanIni();
+  const susut =
+    p.mode === 'bulan'
+      ? susutAntara(d.aset, p.ym, p.ym)
+      : p.mode === 'tahun'
+        ? susutAntara(d.aset, `${p.tahun}-01`, `${p.tahun}-12` < kini ? `${p.tahun}-12` : kini)
+        : susutAntara(d.aset, '1900-01', kini);
   const totalP = Object.values(pend).reduce((a, b) => a + b, 0);
   const totalB = Object.values(beb).reduce((a, b) => a + b, 0) + susut;
   const urut = (o: Record<string, number>) => Object.entries(o).sort((a, b) => b[1] - a[1]);
@@ -124,15 +138,20 @@ export function pphBadan(labaSetahun: number, omzetSetahun: number) {
 
 export function estimasiPPhBadan(d: DataKeuangan, tahun: string) {
   const trx = d.transaksi.filter((t) => t.tanggal.startsWith(tahun));
-  const omzet = trx.filter((t) => t.tipe === 'masuk' && t.kategori !== KATEGORI_TITIPAN).reduce((s, t) => s + t.nominal, 0);
+  const omzet = trx
+    .filter((t) => t.tipe === 'masuk' && t.kategori !== KATEGORI_TITIPAN && t.kategori !== KATEGORI_KASBON_KEMBALI)
+    .reduce((s, t) => s + t.nominal, 0);
   const bebanSemua = trx.filter((t) => t.tipe === 'keluar').reduce((s, t) => s + t.nominal, 0);
   const prive = trx.filter((t) => t.tipe === 'keluar' && BUKAN_BEBAN.includes(t.kategori)).reduce((s, t) => s + t.nominal, 0);
   const koreksi = trx
     .filter((t) => t.tipe === 'keluar' && KOREKSI_FISKAL.includes(t.kategori) && !BUKAN_BEBAN.includes(t.kategori))
     .reduce((s, t) => s + t.nominal, 0);
   const belanjaAset = trx.filter((t) => t.tipe === 'keluar' && t.kategori === KATEGORI_ASET_TETAP).reduce((s, t) => s + t.nominal, 0);
-  const beban = bebanSemua - prive - belanjaAset;
-  const susut = asetTetap(d.aset).reduce((s, a) => s + susutBulanan(a) * 12, 0);
+  const kasbon = trx.filter((t) => t.tipe === 'keluar' && t.kategori === KATEGORI_KASBON).reduce((s, t) => s + t.nominal, 0);
+  const beban = bebanSemua - prive - belanjaAset - kasbon;
+  // Sampai bulan berjalan untuk tahun ini (sejalan dengan omzet & beban yang juga baru sampai hari ini)
+  const kini = bulanIni();
+  const susut = susutAntara(d.aset, `${tahun}-01`, `${tahun}-12` < kini ? `${tahun}-12` : kini);
   const laba = omzet - beban - susut;
   const labaFiskal = laba + koreksi;
   const pph = pphBadan(labaFiskal, omzet);
