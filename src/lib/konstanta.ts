@@ -11,12 +11,20 @@ export const KATEGORI_KELUAR = [
   'Produksi konten',
   'Prive founder',
   'Sedekah & donasi',
+  'Pembelian aset tetap',
   'Pajak',
   'Lain-lain',
 ] as const;
 
 /* Pengurang ekuitas, bukan biaya usaha — dikeluarkan dari laba rugi */
 export const BUKAN_BEBAN = ['Prive founder'];
+
+/*
+ * Belanja modal ≥ batas kapitalisasi (Rp5 jt): uangnya keluar dari kas, tapi BUKAN beban —
+ * nilainya jadi aset tetap dan masuk laba rugi pelan-pelan lewat penyusutan. Kalau dihitung
+ * sebagai beban juga, pembelian yang sama terhitung dua kali.
+ */
+export const KATEGORI_ASET_TETAP = 'Pembelian aset tetap';
 
 /* Tidak bisa dikurangkan saat menghitung pajak (koreksi fiskal positif) */
 export const KOREKSI_FISKAL = ['Sedekah & donasi', 'Prive founder'];

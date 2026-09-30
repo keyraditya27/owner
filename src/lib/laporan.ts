@@ -3,7 +3,7 @@
  * pajakTabTahunan, dan pphBadan() dari prototipe v7. Dipakai halaman Laporan,
  * halaman Pajak, dan unduhan CSV supaya angkanya selalu sama.
  */
-import { BUKAN_BEBAN, KATEGORI_TITIPAN, KOREKSI_FISKAL } from '@/lib/konstanta';
+import { BUKAN_BEBAN, KATEGORI_ASET_TETAP, KATEGORI_TITIPAN, KOREKSI_FISKAL } from '@/lib/konstanta';
 import { asetTetap, susutBulanan, totalAkumulasi, totalNilaiBuku, totalPerolehan } from '@/lib/aset';
 import {
   danaTitipan,
@@ -60,11 +60,13 @@ export function labaRugi(d: DataKeuangan, p: Periode) {
   const pend: Record<string, number> = {};
   const beb: Record<string, number> = {};
   let prive = 0;
+  let belanjaAset = 0;
   arr.forEach((t) => {
     if (t.tipe === 'masuk') {
       if (t.kategori === KATEGORI_TITIPAN) return; // dana titipan = kewajiban, bukan pendapatan
       pend[t.kategori] = (pend[t.kategori] || 0) + t.nominal;
     } else if (BUKAN_BEBAN.includes(t.kategori)) prive += t.nominal; // pengurang ekuitas
+    else if (t.kategori === KATEGORI_ASET_TETAP) belanjaAset += t.nominal; // masuk lewat penyusutan
     else beb[t.kategori] = (beb[t.kategori] || 0) + t.nominal;
   });
   const bulan =
@@ -73,7 +75,7 @@ export function labaRugi(d: DataKeuangan, p: Periode) {
   const totalP = Object.values(pend).reduce((a, b) => a + b, 0);
   const totalB = Object.values(beb).reduce((a, b) => a + b, 0) + susut;
   const urut = (o: Record<string, number>) => Object.entries(o).sort((a, b) => b[1] - a[1]);
-  return { pendapatan: urut(pend), beban: urut(beb), susut, bulan, totalP, totalB, laba: totalP - totalB, prive };
+  return { pendapatan: urut(pend), beban: urut(beb), susut, bulan, totalP, totalB, laba: totalP - totalB, prive, belanjaAset };
 }
 
 /* ---------------------------------------------------------------- ARUS KAS */
@@ -128,7 +130,8 @@ export function estimasiPPhBadan(d: DataKeuangan, tahun: string) {
   const koreksi = trx
     .filter((t) => t.tipe === 'keluar' && KOREKSI_FISKAL.includes(t.kategori) && !BUKAN_BEBAN.includes(t.kategori))
     .reduce((s, t) => s + t.nominal, 0);
-  const beban = bebanSemua - prive;
+  const belanjaAset = trx.filter((t) => t.tipe === 'keluar' && t.kategori === KATEGORI_ASET_TETAP).reduce((s, t) => s + t.nominal, 0);
+  const beban = bebanSemua - prive - belanjaAset;
   const susut = asetTetap(d.aset).reduce((s, a) => s + susutBulanan(a) * 12, 0);
   const laba = omzet - beban - susut;
   const labaFiskal = laba + koreksi;
