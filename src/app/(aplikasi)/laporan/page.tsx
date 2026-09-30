@@ -4,7 +4,7 @@ import { GulirX, Insight, Kosong, Pill, Seksi, Sub } from '@/components/ui';
 import { totalNilaiBuku } from '@/lib/aset';
 import { ambilData, ambilPeriode } from '@/lib/data';
 import { bulanLabel, hariIni, rp, tgl } from '@/lib/format';
-import { totalKas, totalPiutang, type DataKeuangan } from '@/lib/hitung';
+import { piutangKasbon, totalKas, totalPiutang, type DataKeuangan } from '@/lib/hitung';
 import { arusKas, labaRugi, neraca, perKategori } from '@/lib/laporan';
 import { halamanDari, tabAktif } from '@/lib/navigasi';
 import { periodeLabel, ymPatokan, type Periode } from '@/lib/periode';
@@ -27,7 +27,7 @@ export default async function HalamanLaporan({ searchParams }: { searchParams: P
         sub={
           <>
             {periodeLabel(periode)} · Saldo kas <b>{rp(totalKas(d))}</b> · Total aset{' '}
-            <b>{rp(totalKas(d) + totalPiutang(d) + totalNilaiBuku(d.aset, ymPatokan(periode)))}</b>
+            <b>{rp(totalKas(d) + totalPiutang(d) + piutangKasbon(d) + totalNilaiBuku(d.aset, ymPatokan(periode)))}</b>
           </>
         }
         aksi={
@@ -91,6 +91,7 @@ function Neraca({ d, p }: { d: DataKeuangan; p: Periode }) {
               ))}
               {n.tanpaRekening !== null ? <Rinci label="Belum ditandai rekening" nilai={rp(n.tanpaRekening)} /> : null}
               <Rinci label="Piutang usaha" sub={`${n.jumlahTagihan} tagihan`} nilai={rp(n.piutang)} />
+              {n.kasbon ? <Rinci label="Kasbon tim" sub="Pinjaman ke tim yang akan dikembalikan" nilai={rp(n.kasbon)} /> : null}
               <Grup>Aset Tetap</Grup>
               <Rinci label="Harga perolehan" nilai={rp(n.perolehan)} />
               <Rinci label="Akumulasi penyusutan" nilai={`(${rp(n.akumulasi)})`} />

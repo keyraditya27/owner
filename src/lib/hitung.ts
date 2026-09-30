@@ -6,7 +6,7 @@
  * Semua fungsi murni: menerima data, mengembalikan angka. Bisa dipakai di
  * server maupun browser.
  */
-import { KATEGORI_TITIPAN, JENIS_PAJAK } from '@/lib/konstanta';
+import { KATEGORI_KASBON, KATEGORI_KASBON_KEMBALI, KATEGORI_TITIPAN, JENIS_PAJAK } from '@/lib/konstanta';
 import { hariSelisih, tanggalBulanBerikut } from '@/lib/format';
 import type { Aset, Klien, Pajak, Perusahaan, Rekening, Tagihan, Transaksi, UtangVendor, Vendor } from '@/lib/tipe-db';
 
@@ -62,6 +62,20 @@ export function tagihanTerbuka(d: DataKeuangan): TagihanTerbuka[] {
 }
 
 export const totalPiutang = (d: DataKeuangan) => tagihanTerbuka(d).reduce((s, i) => s + i.sisa, 0);
+/** Kasbon tim yang belum kembali (keluar "Kasbon tim" − masuk "Pengembalian kasbon"). */
+export const piutangKasbon = (d: DataKeuangan) =>
+  Math.max(
+    0,
+    d.transaksi.reduce(
+      (s, t) =>
+        t.tipe === 'keluar' && t.kategori === KATEGORI_KASBON
+          ? s + t.nominal
+          : t.tipe === 'masuk' && t.kategori === KATEGORI_KASBON_KEMBALI
+            ? s - t.nominal
+            : s,
+      0,
+    ),
+  );
 export const telat = (d: DataKeuangan) => tagihanTerbuka(d).filter((i) => hariSelisih(i.jatuh_tempo) < 0);
 
 export type WarnaPill = 'hijau' | 'merah' | 'amber' | 'biru' | 'abu' | 'navy';

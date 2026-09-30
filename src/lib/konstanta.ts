@@ -12,6 +12,7 @@ export const KATEGORI_KELUAR = [
   'Prive founder',
   'Sedekah & donasi',
   'Pembelian aset tetap',
+  'Kasbon tim',
   'Pajak',
   'Lain-lain',
 ] as const;
@@ -26,6 +27,14 @@ export const BUKAN_BEBAN = ['Prive founder'];
  */
 export const KATEGORI_ASET_TETAP = 'Pembelian aset tetap';
 
+/*
+ * Kasbon/pinjaman ke tim yang AKAN DIKEMBALIKAN = piutang, bukan beban.
+ * Keluar dicatat "Kasbon tim", uang yang kembali dicatat masuk "Pengembalian kasbon"
+ * (bukan pendapatan). Sisanya tampil sebagai piutang di neraca.
+ */
+export const KATEGORI_KASBON = 'Kasbon tim';
+export const KATEGORI_KASBON_KEMBALI = 'Pengembalian kasbon';
+
 /* Tidak bisa dikurangkan saat menghitung pajak (koreksi fiskal positif) */
 export const KOREKSI_FISKAL = ['Sedekah & donasi', 'Prive founder'];
 
@@ -34,6 +43,7 @@ export const KATEGORI_MASUK = [
   'Project fee',
   'Ads budget titipan',
   'Bonus/insentif',
+  'Pengembalian kasbon',
   'Lain-lain',
 ] as const;
 

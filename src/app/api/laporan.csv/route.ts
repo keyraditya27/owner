@@ -54,6 +54,7 @@ export async function GET(req: NextRequest) {
       ...n.rekening.map((r) => [r.nama, r.saldo]),
       ...(n.tanpaRekening !== null ? [['Belum ditandai rekening', n.tanpaRekening]] : []),
       ['Piutang usaha', n.piutang],
+      ['Kasbon tim', n.kasbon],
       ['ASET TETAP', ''],
       ['Harga perolehan', n.perolehan],
       ['Akumulasi penyusutan', -n.akumulasi],
