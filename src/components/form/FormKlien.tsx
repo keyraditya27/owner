@@ -8,7 +8,7 @@ import { Grid, InputRupiah, Isian, PesanGalat } from './Isian';
 import { usePusat } from './PusatForm';
 
 export default function FormKlien({ data }: { data?: Klien }) {
-  const { tutup, kabar } = usePusat();
+  const { tutup, kabar, bolehHapus } = usePusat();
   const [proses, mulai] = useTransition();
   const [galat, setGalat] = useState('');
   const [f, setF] = useState({
@@ -47,7 +47,7 @@ export default function FormKlien({ data }: { data?: Klien }) {
       onTutup={tutup}
       kaki={
         <>
-          {data ? (
+          {data && bolehHapus ? (
             <button className="btn-ghost mr-auto !border-merah-garis !text-merah" onClick={hapus} disabled={proses}>
               Hapus klien
             </button>

@@ -25,6 +25,12 @@ export const segarkan = () => revalidatePath('/', 'layout');
 /* ---------------- validasi ---------------- */
 export class Tolak extends Error {}
 
+/** Menghapus data hanya boleh akun pemilik (Key). Dijaga juga oleh RLS (schema-tahap7.sql). */
+export const PESAN_HAPUS = 'Hanya akun pemilik (Key) yang bisa menghapus data.';
+export function wajibBolehHapus(p: { peran: string }) {
+  if (p.peran !== 'pemilik') throw new Tolak(PESAN_HAPUS);
+}
+
 export const teks = (v: unknown, maks = 500) => String(v ?? '').trim().slice(0, maks);
 
 export function wajibTeks(v: unknown, nama: string, maks = 500) {

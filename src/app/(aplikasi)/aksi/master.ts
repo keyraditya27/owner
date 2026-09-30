@@ -15,6 +15,8 @@ import {
   tanggal,
   teks,
   wajibTeks,
+  PESAN_HAPUS,
+  wajibBolehHapus,
 } from '@/lib/aksi';
 import { wajibLogin } from '@/lib/pengguna';
 import { klienServer } from '@/lib/supabase/server';
@@ -36,7 +38,7 @@ async function hapus(tabel: Tabel, id: string): Promise<Hasil> {
   const db = await klienServer();
   const { data, error } = await db.from(tabel).delete().eq('id', idWajib(id)).select('id');
   if (error) return { galat: pesanGalat(error, 'menghapus') };
-  if (!data?.length) return { galat: 'Hanya pemilik atau admin yang boleh menghapus data ini.' };
+  if (!data?.length) return { galat: PESAN_HAPUS };
   segarkan();
   return { ok: true };
 }
@@ -59,7 +61,7 @@ export async function simpanRekening(m: Masukan): Promise<Hasil> {
 }
 export const hapusRekening = async (id: string) =>
   jalankan(async () => {
-    await wajibLogin();
+    wajibBolehHapus(await wajibLogin());
     return hapus('rekening', id);
   });
 
@@ -86,7 +88,7 @@ export async function simpanVendor(m: Masukan): Promise<Hasil> {
 }
 export const hapusVendor = async (id: string) =>
   jalankan(async () => {
-    await wajibLogin();
+    wajibBolehHapus(await wajibLogin());
     return hapus('vendor', id);
   });
 
@@ -108,6 +110,6 @@ export async function simpanUtang(m: Masukan): Promise<Hasil> {
 }
 export const hapusUtang = async (id: string) =>
   jalankan(async () => {
-    await wajibLogin();
+    wajibBolehHapus(await wajibLogin());
     return hapus('utang_vendor', id);
   });

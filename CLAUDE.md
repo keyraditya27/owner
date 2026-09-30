@@ -122,7 +122,7 @@ Tarif: PPN efektif 11% jasa nonmewah · PPh 23 jasa 2% (4% tanpa NPWP) · PPh 4(
 
 ## Tim
 
-Key (pemilik, akses penuh) · Tasya, Caca, Ipii (tim marketing). Rencana hak akses: pemilik bisa semuanya; staf hanya bisa membuat dan mengubah transaksi miliknya sendiri, tidak bisa menghapus, tidak bisa melihat gaji.
+Key (pemilik, akses penuh) · Tasya, Caca, Ipii (tim marketing). Hak akses: pemilik bisa semuanya; staf hanya bisa membuat dan mengubah transaksi miliknya sendiri, tidak bisa melihat gaji. **Menghapus data hanya boleh akun pemilik (Key)** — admin pun tidak (`schema-tahap7.sql`, `wajibBolehHapus`).
 
 ## Cara kerja yang saya harapkan
 

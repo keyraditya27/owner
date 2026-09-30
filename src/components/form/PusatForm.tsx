@@ -38,6 +38,8 @@ type Konteks = Pilihan & {
   tutup: () => void;
   kabar: (teks: string) => void;
   bolehKelola: boolean;
+  /** Tombol Hapus hanya untuk pemilik (Key). */
+  bolehHapus: boolean;
 };
 
 const Ctx = createContext<Konteks | null>(null);
@@ -66,6 +68,7 @@ export default function PusatForm({ pilihan, children }: { pilihan: Pilihan; chi
     tutup,
     kabar,
     bolehKelola: pilihan.peran === 'pemilik' || pilihan.peran === 'admin',
+    bolehHapus: pilihan.peran === 'pemilik',
   };
 
   return (
