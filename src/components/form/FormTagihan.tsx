@@ -9,7 +9,7 @@ import { Grid, InputRupiah, Isian, PesanGalat } from './Isian';
 import { usePusat } from './PusatForm';
 
 export default function FormTagihan({ klien, data }: { klien: Klien; data?: Tagihan }) {
-  const { tutup, kabar } = usePusat();
+  const { tutup, kabar, bolehHapus } = usePusat();
   const [proses, mulai] = useTransition();
   const [galat, setGalat] = useState('');
 
@@ -49,7 +49,7 @@ export default function FormTagihan({ klien, data }: { klien: Klien; data?: Tagi
       onTutup={tutup}
       kaki={
         <>
-          {data ? (
+          {data && bolehHapus ? (
             <button className="btn-ghost mr-auto !border-merah-garis !text-merah" onClick={hapus} disabled={proses}>
               Hapus
             </button>

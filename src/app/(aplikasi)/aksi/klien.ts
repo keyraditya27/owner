@@ -12,6 +12,8 @@ import {
   tanggal,
   teks,
   wajibTeks,
+  PESAN_HAPUS,
+  wajibBolehHapus,
 } from '@/lib/aksi';
 import { wajibLogin } from '@/lib/pengguna';
 import { klienServer } from '@/lib/supabase/server';
@@ -51,12 +53,12 @@ export async function simpanKlien(m: Masukan): Promise<Hasil> {
 
 export async function hapusKlien(id: string): Promise<Hasil> {
   return jalankan(async () => {
-    await wajibLogin();
+    wajibBolehHapus(await wajibLogin());
     const db = await klienServer();
     // Tagihannya ikut terhapus (on delete cascade); transaksi tetap ada, klien_id jadi kosong.
     const { data, error } = await db.from('klien').delete().eq('id', idWajib(id)).select('id');
     if (error) return { galat: pesanGalat(error, 'menghapus') };
-    if (!data?.length) return { galat: 'Hanya pemilik atau admin yang boleh menghapus klien.' };
+    if (!data?.length) return { galat: PESAN_HAPUS };
     segarkan();
     return { ok: true };
   });
@@ -94,11 +96,11 @@ export async function simpanTagihan(m: Masukan): Promise<Hasil> {
 
 export async function hapusTagihan(id: string): Promise<Hasil> {
   return jalankan(async () => {
-    await wajibLogin();
+    wajibBolehHapus(await wajibLogin());
     const db = await klienServer();
     const { data, error } = await db.from('tagihan').delete().eq('id', idWajib(id)).select('id');
     if (error) return { galat: pesanGalat(error, 'menghapus') };
-    if (!data?.length) return { galat: 'Hanya pemilik atau admin yang boleh menghapus tagihan.' };
+    if (!data?.length) return { galat: PESAN_HAPUS };
     segarkan();
     return { ok: true };
   });

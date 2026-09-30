@@ -15,6 +15,8 @@ import {
   tanggal,
   teks,
   wajibTeks,
+  PESAN_HAPUS,
+  wajibBolehHapus,
 } from '@/lib/aksi';
 import { bulanIni, geserBulan } from '@/lib/format';
 import { JENIS_PAJAK } from '@/lib/konstanta';
@@ -36,7 +38,7 @@ async function hapus(tabel: 'aset' | 'pajak', id: string): Promise<Hasil> {
   const db = await klienServer();
   const { data, error } = await db.from(tabel).delete().eq('id', idWajib(id)).select('id');
   if (error) return { galat: pesanGalat(error, 'menghapus') };
-  if (!data?.length) return { galat: 'Hanya pemilik atau admin yang boleh menghapus data ini.' };
+  if (!data?.length) return { galat: PESAN_HAPUS };
   segarkan();
   return { ok: true };
 }
@@ -78,7 +80,7 @@ export async function simpanAset(m: Masukan): Promise<Hasil> {
 }
 export async function hapusAset(id: string) {
   return jalankan(async () => {
-    await wajibLogin();
+    wajibBolehHapus(await wajibLogin());
     return hapus('aset', id);
   });
 }
@@ -105,7 +107,7 @@ export async function simpanPajak(m: Masukan): Promise<Hasil> {
 }
 export async function hapusPajak(id: string) {
   return jalankan(async () => {
-    await wajibLogin();
+    wajibBolehHapus(await wajibLogin());
     return hapus('pajak', id);
   });
 }

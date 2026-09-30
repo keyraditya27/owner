@@ -28,9 +28,10 @@ function useSimpan() {
 }
 
 function Kaki({ proses, tutup, simpan, hapus }: { proses: boolean; tutup: () => void; simpan: () => void; hapus?: () => void }) {
+  const { bolehHapus } = usePusat();
   return (
     <>
-      {hapus ? (
+      {hapus && bolehHapus ? (
         <button className="btn-ghost mr-auto !border-merah-garis !text-merah" onClick={hapus} disabled={proses}>
           Hapus
         </button>

@@ -45,9 +45,10 @@ function Kaki({
   onSimpan: () => void;
   onHapus?: () => void;
 }) {
+  const { bolehHapus } = usePusat();
   return (
     <>
-      {onHapus ? (
+      {onHapus && bolehHapus ? (
         <button className="btn-ghost mr-auto !border-merah-garis !text-merah" onClick={onHapus} disabled={proses}>
           Hapus
         </button>

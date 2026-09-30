@@ -14,6 +14,8 @@ import {
   segarkan,
   tanggal,
   teks,
+  PESAN_HAPUS,
+  wajibBolehHapus,
 } from '@/lib/aksi';
 import { wajibLogin } from '@/lib/pengguna';
 import { klienAdmin } from '@/lib/supabase/admin';
@@ -119,11 +121,11 @@ async function unggahBukti(trxId: string, file: File): Promise<string | null> {
 
 export async function hapusTransaksi(id: string): Promise<Hasil> {
   return jalankan(async () => {
-    await wajibLogin();
+    wajibBolehHapus(await wajibLogin());
     const db = await klienServer();
     const { data, error } = await db.from('transaksi').delete().eq('id', idWajib(id)).select('id');
     if (error) return { galat: pesanGalat(error, 'menghapus') };
-    if (!data?.length) return { galat: 'Hanya pemilik atau admin yang boleh menghapus transaksi.' };
+    if (!data?.length) return { galat: PESAN_HAPUS };
     // File bukti sengaja tidak dihapus: tetap tersimpan sebagai jejak audit.
     segarkan();
     return { ok: true };

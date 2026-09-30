@@ -176,6 +176,7 @@ export function rencanakan(aksiMentah: unknown, k: Konteks) {
     },
 
     transaksi_hapus(a) {
+      if (k.pengguna.peran !== 'pemilik') throw new Tolak('Hanya akun pemilik (Key) yang bisa menghapus data');
       const t = cariTransaksi(a.cari);
       cekTutup(t.tanggal);
       ops.push({ op: 'delete', tabel: 'transaksi', id: t.id });

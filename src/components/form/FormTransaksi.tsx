@@ -29,7 +29,7 @@ async function kecilkan(file: File, maks = 1100): Promise<File> {
 }
 
 export default function FormTransaksi({ data }: { data?: Transaksi }) {
-  const { tutup, kabar, klien, rekening, bolehKelola } = usePusat();
+  const { tutup, kabar, klien, rekening, bolehKelola, bolehHapus } = usePusat();
   const [proses, mulai] = useTransition();
   const [galat, setGalat] = useState('');
   const [f, setF] = useState({
@@ -81,7 +81,7 @@ export default function FormTransaksi({ data }: { data?: Transaksi }) {
       onTutup={tutup}
       kaki={
         <>
-          {data && bolehKelola ? (
+          {data && bolehHapus ? (
             <button className="btn-ghost mr-auto !border-merah-garis !text-merah" onClick={hapus} disabled={proses}>
               Hapus
             </button>
