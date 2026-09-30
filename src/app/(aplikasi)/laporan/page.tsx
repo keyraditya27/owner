@@ -165,7 +165,11 @@ function LabaRugi({ d, p }: { d: DataKeuangan; p: Periode }) {
             {r.beban.map(([k, v]) => (
               <Rinci key={k} label={k} nilai={`(${rp(v)})`} />
             ))}
-            <Rinci label="Penyusutan aset tetap" sub={`${r.bulan} bulan`} nilai={`(${rp(r.susut)})`} />
+            <Rinci
+              label="Penyusutan aset tetap"
+              sub={`${r.bulan} bulan${r.belanjaAset ? ` · pembelian aset ${rp(r.belanjaAset)} tidak dihitung sebagai beban` : ''}`}
+              nilai={`(${rp(r.susut)})`}
+            />
             <tr>
               <td>
                 <b>Total beban</b>
