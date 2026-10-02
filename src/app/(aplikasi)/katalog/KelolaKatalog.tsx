@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { hapusKelompok, hapusLayanan, simpanKelompok, simpanLayanan } from '@/app/(aplikasi)/aksi/invoice';
 import { Grid, InputRupiah, Isian, PesanGalat } from '@/components/form/Isian';
@@ -32,6 +32,14 @@ export default function KelolaKatalog({ kelompok, layanan }: { kelompok: Kelompo
   const [galat, setGalat] = useState('');
   const [grupBaru, setGrupBaru] = useState('');
   const [f, setF] = useState<typeof KOSONG | null>(null);
+  // Form ubah ada di bawah daftar (22 layanan) — gulir ke sana supaya klik "Ubah" terlihat ada hasilnya.
+  const kotakForm = useRef<HTMLDivElement>(null);
+  const idForm = f ? f.id || 'baru:' + f.kelompok_id : '';
+  useEffect(() => {
+    if (!idForm) return;
+    kotakForm.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    kotakForm.current?.querySelector<HTMLInputElement>('input')?.focus({ preventScroll: true });
+  }, [idForm]);
   const set = (k: keyof typeof KOSONG, v: string | boolean) => setF((x) => (x ? { ...x, [k]: v } : x));
 
   const jalan = (fn: () => Promise<Hasil>, pesan: string, konfirmasi?: string) =>
@@ -150,7 +158,7 @@ export default function KelolaKatalog({ kelompok, layanan }: { kelompok: Kelompo
       })}
 
       {f ? (
-        <div className="rounded-xl border border-garis bg-krem p-4">
+        <div ref={kotakForm} className="scroll-mt-24 rounded-xl border-2 border-biru bg-krem p-4">
           <h3 className="mb-3 font-serif text-[16px] font-bold">{f.id ? 'Ubah layanan' : 'Layanan baru'}</h3>
           <Grid>
             <Isian label="Kelompok">
