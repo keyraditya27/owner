@@ -445,9 +445,18 @@ export default function Penyusun({
                   {b.pilih && b.qty > 0 ? (
                     <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[12px] text-muted">
                       {b.layanan_id ? (
-                        <span>
-                          {rp(b.harga)} / {b.satuan}
-                        </span>
+                        <>
+                          {/* Harga katalog hanya bawaan — bisa diubah per klien, tidak mengubah katalog. */}
+                          <div className="w-32">
+                            <InputRupiah
+                              nilai={String(b.harga || "")}
+                              ubah={(v) =>
+                                ubahBaris(b.kunci, { harga: Number(v || 0) })
+                              }
+                            />
+                          </div>
+                          <span>/ {b.satuan}</span>
+                        </>
                       ) : (
                         <>
                           <div className="w-32">
