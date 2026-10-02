@@ -29,6 +29,7 @@ Di Supabase → SQL Editor, jalankan berurutan:
 6. `schema-tahap5.sql` — hak akses per peran, tutup buku, antrean persetujuan pengeluaran, bucket `backup`.
 7. `schema-tahap6.sql` — sinkron Google Sheets: kolom Catatan di transaksi, sidik baris, kunci supaya hanya satu sinkron berjalan, dan perbaikan pemicu antrean (versi lama berhenti mengantre perubahan aplikasi pada baris yang pernah diubah dari sheet).
 8. `schema-tahap7.sql` — menghapus data hanya bisa dilakukan akun pemilik (Key). Admin dan staf tetap bisa mencatat dan mengubah, tapi tombol Hapus tidak muncul dan database menolak perintah hapus dari akun mereka.
+9. `schema-tahap8-invoice.sql` — modul Dokumen bagian 1: Katalog Layanan dan Penawaran & Invoice. Invoice yang diterbitkan masuk Piutang Klien; ditandai lunas → transaksi masuk (nilai yang ditransfer, setelah PPh 23) tercatat otomatis, sekali saja.
 
 Semua file aman dijalankan ulang. Semuanya sudah diuji di Postgres 16.
 

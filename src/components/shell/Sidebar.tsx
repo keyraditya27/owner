@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import IkonSvg from '@/components/IkonSvg';
 import LogoARL from '@/components/LogoARL';
-import { HALAMAN } from '@/lib/navigasi';
+import { HALAMAN, HALAMAN_DOKUMEN } from '@/lib/navigasi';
 import type { PenggunaAktif } from '@/lib/pengguna';
 import { keluar } from '@/app/login/actions';
 
@@ -43,6 +43,16 @@ export default function Sidebar({
               {h.href === '/klien' && tunggakan > 0 ? (
                 <span className="ml-auto rounded-xl bg-merah px-2 py-px text-[10.5px] font-bold text-white">{tunggakan}</span>
               ) : null}
+            </Link>
+          );
+        })}
+        <div className="mx-3 mb-1 mt-3 text-[10.5px] font-bold tracking-[1.4px] text-langit-5">DOKUMEN</div>
+        {HALAMAN_DOKUMEN.map((h) => {
+          const on = aktif(path, h.href);
+          return (
+            <Link key={h.href} href={h.href} aria-current={on ? 'page' : undefined} className={kelasTombol(on)}>
+              <IkonSvg nama={h.ikon} className="h-[15px] w-[15px] shrink-0 opacity-85" />
+              {h.label}
             </Link>
           );
         })}

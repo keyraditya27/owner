@@ -38,6 +38,15 @@ export type Perusahaan = {
   tahun_buku: number;
   logo_url: string | null;
   dibuat_pada: string;
+  // kop invoice (schema-tahap8-invoice.sql)
+  telp?: string | null;
+  email?: string | null;
+  bank?: string | null;
+  no_rekening?: string | null;
+  atas_nama?: string | null;
+  penanda_tangan?: string | null;
+  jabatan_ttd?: string | null;
+  folder_invoice_url?: string | null;
 };
 
 export type Pengguna = {
@@ -74,6 +83,10 @@ export type Klien = KolomSinkron & {
   catatan: string | null;
   aktif: boolean;
   dibuat_pada: string;
+  // untuk invoice (schema-tahap8-invoice.sql)
+  alamat?: string | null;
+  email?: string | null;
+  potong_pph23?: boolean;
 };
 
 export type Tagihan = KolomSinkron & {

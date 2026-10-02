@@ -102,6 +102,40 @@ export const HALAMAN: Halaman[] = [
   },
 ];
 
+/**
+ * Grup Dokumen — terpisah dari enam menu keuangan. Datanya di tabel sendiri
+ * (dokumen, layanan); yang menyambung ke keuangan hanya tagihan & transaksi.
+ */
+export const HALAMAN_DOKUMEN: Halaman[] = [
+  {
+    href: '/invoice',
+    label: 'Penawaran & Invoice',
+    labelPendek: 'Invoice',
+    ikon: 'dok',
+    judul: 'Penawaran & Invoice',
+    badge: 'Dokumen',
+    tabs: [
+      { kunci: 'semua', label: 'Semua' },
+      { kunci: 'draf', label: 'Draf' },
+      { kunci: 'terkirim', label: 'Belum Lunas' },
+      { kunci: 'lunas', label: 'Lunas' },
+    ],
+  },
+  {
+    href: '/katalog',
+    label: 'Katalog Layanan',
+    labelPendek: 'Katalog',
+    ikon: 'daftar',
+    judul: 'Katalog Layanan',
+    badge: 'Daftar Harga',
+    tabs: [
+      { kunci: 'layanan', label: 'Layanan & Porsi' },
+      { kunci: 'kop', label: 'Kop & Pembayaran' },
+    ],
+  },
+];
+export const halamanDokumen = (href: string) => HALAMAN_DOKUMEN.find((h) => h.href === href)!;
+
 /** Halaman Kontrol (Tahap 5) — di luar enam menu utama. Tab yang tampil tergantung peran. */
 export const KONTROL: Halaman = {
   href: '/kontrol',
