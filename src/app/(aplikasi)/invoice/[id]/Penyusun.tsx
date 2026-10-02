@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   batalkanDokumen,
@@ -80,7 +80,7 @@ export default function Penyusun({
   kelompok: Kelompok[];
   layanan: Layanan[];
 }) {
-  const { bolehKelola, bolehHapus, kabar } = usePusat();
+  const { bolehKelola, bolehHapus, kabar, buka } = usePusat();
   const router = useRouter();
   const [proses, mulai] = useTransition();
   const [galat, setGalat] = useState("");
@@ -158,6 +158,19 @@ export default function Penyusun({
       tempo_hari: k?.tempo_hari ?? x.tempo_hari,
     }));
   };
+
+  // Klien baru dari tombol "+ Klien baru": begitu muncul di daftar, langsung dipilih.
+  const idKlienLama = useRef(new Set(klien.map((k) => k.id)));
+  const tungguKlienBaru = useRef(false);
+  useEffect(() => {
+    const baru = klien.find((k) => !idKlienLama.current.has(k.id));
+    idKlienLama.current = new Set(klien.map((k) => k.id));
+    if (baru && tungguKlienBaru.current) {
+      tungguKlienBaru.current = false;
+      pilihKlien(baru.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [klien]);
 
   const tambahBebas = () =>
     setBaris((bs) => [
@@ -255,17 +268,31 @@ export default function Penyusun({
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <label className="label">Klien</label>
-              <select
-                value={f.klien_id}
-                onChange={(e) => pilihKlien(e.target.value)}
-              >
-                <option value="">— pilih klien —</option>
-                {klien.map((k) => (
-                  <option key={k.id} value={k.id}>
-                    {k.nama}
-                  </option>
-                ))}
-              </select>
+              <div className="flex gap-2">
+                <select
+                  value={f.klien_id}
+                  onChange={(e) => pilihKlien(e.target.value)}
+                >
+                  <option value="">— pilih klien —</option>
+                  {klien.map((k) => (
+                    <option key={k.id} value={k.id}>
+                      {k.nama}
+                    </option>
+                  ))}
+                </select>
+                {bolehKelola ? (
+                  <button
+                    type="button"
+                    className="btn-ghost btn-sm shrink-0 whitespace-nowrap"
+                    onClick={() => {
+                      tungguKlienBaru.current = true;
+                      buka({ jenis: "klien" });
+                    }}
+                  >
+                    + Klien baru
+                  </button>
+                ) : null}
+              </div>
             </div>
             <div>
               <label className="label">Tanggal</label>
