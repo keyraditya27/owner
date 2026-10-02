@@ -6,6 +6,7 @@ import { useState } from 'react';
 import IkonSvg from '@/components/IkonSvg';
 import LogoARL from '@/components/LogoARL';
 import type { PenggunaAktif } from '@/lib/pengguna';
+import { HALAMAN_DOKUMEN } from '@/lib/navigasi';
 import { keluar } from '@/app/login/actions';
 
 /**
@@ -35,6 +36,20 @@ export default function HeaderHP({ pengguna, menunggu = 0 }: { pengguna: Penggun
           <span className="text-langit-5">
             {pengguna.email} · {pengguna.peran}
           </span>
+          <span className="mt-1 px-2 text-[10.5px] font-bold tracking-[1.4px] text-langit-5">DOKUMEN</span>
+          {HALAMAN_DOKUMEN.map((h) => (
+            <Link
+              key={h.href}
+              href={h.href}
+              onClick={() => setBuka(false)}
+              className={`flex items-center gap-2 rounded-lg px-2 py-2 no-underline ${
+                path.startsWith(h.href) ? 'bg-white text-navy' : 'text-langit-1'
+              }`}
+            >
+              <IkonSvg nama={h.ikon} /> {h.label}
+            </Link>
+          ))}
+          <span className="mt-1 border-t border-white/[.14]" />
           <Link
             href="/kontrol"
             onClick={() => setBuka(false)}

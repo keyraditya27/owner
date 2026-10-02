@@ -40,6 +40,11 @@ export async function simpanKlien(m: Masukan): Promise<Hasil> {
       tanggal_tagih: angka(m.tanggal_tagih, 1, 28, 1, 'Tanggal tagih'),
       tempo_hari: angka(m.tempo_hari, 0, 90, 7, 'Tempo'),
       catatan: teks(m.catatan, 1000) || null,
+      // untuk invoice (schema-tahap8-invoice.sql)
+      npwp: teks(m.npwp, 30) || null,
+      alamat: teks(m.alamat, 300) || null,
+      email: teks(m.email, 120) || null,
+      potong_pph23: m.potong_pph23 === true || m.potong_pph23 === 'true',
     };
     const db = await klienServer();
     const q = id ? db.from('klien').update(d).eq('id', id).select('id') : db.from('klien').insert(d).select('id');

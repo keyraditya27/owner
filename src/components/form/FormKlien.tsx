@@ -20,6 +20,10 @@ export default function FormKlien({ data }: { data?: Klien }) {
     tanggal_tagih: String(data?.tanggal_tagih ?? 1),
     tempo_hari: String(data?.tempo_hari ?? 7),
     catatan: data?.catatan ?? '',
+    npwp: data?.npwp ?? '',
+    alamat: data?.alamat ?? '',
+    email: data?.email ?? '',
+    potong_pph23: data?.potong_pph23 ? 'true' : '',
   });
   const set = (k: keyof typeof f, v: string) => setF((x) => ({ ...x, [k]: v }));
 
@@ -82,6 +86,26 @@ export default function FormKlien({ data }: { data?: Klien }) {
         </Isian>
         <Isian label="Tempo (hari)" htmlFor="kTempo">
           <input id="kTempo" type="number" min={0} max={90} value={f.tempo_hari} onChange={(e) => set('tempo_hari', e.target.value)} />
+        </Isian>
+        <Isian label="Alamat (untuk invoice)" penuh htmlFor="kAlamat">
+          <input id="kAlamat" value={f.alamat} onChange={(e) => set('alamat', e.target.value)} />
+        </Isian>
+        <Isian label="NPWP" htmlFor="kNpwp">
+          <input id="kNpwp" value={f.npwp} onChange={(e) => set('npwp', e.target.value)} />
+        </Isian>
+        <Isian label="Email" htmlFor="kEmail">
+          <input id="kEmail" type="email" value={f.email} onChange={(e) => set('email', e.target.value)} />
+        </Isian>
+        <Isian label="Pajak" penuh>
+          <label className="flex items-center gap-2 text-[13px]">
+            <input
+              type="checkbox"
+              className="!w-auto"
+              checked={f.potong_pph23 === 'true'}
+              onChange={(e) => set('potong_pph23', e.target.checked ? 'true' : '')}
+            />
+            Berbentuk PT/CV — memotong PPh 23 2% dari fee
+          </label>
         </Isian>
         <Isian label="Catatan" penuh htmlFor="kCat">
           <textarea id="kCat" rows={2} value={f.catatan} onChange={(e) => set('catatan', e.target.value)} />
